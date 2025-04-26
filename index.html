@@ -381,8 +381,9 @@
                     const idx = Number(card.dataset.index);
                     const [key, data] = this.currentCards[idx];
                     this.selectedCardsList.push({
-                        key:     key,
-                        title:   data.title,
+                        card,                // сам <div class="card">
+                        wrapper,             // его обёртка <div class="card-wrapper">
+                        title: data.title,   // для передачи боту
                         meaning: data.meaning
                     });
 
