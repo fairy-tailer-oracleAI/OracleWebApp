@@ -269,10 +269,12 @@
         class TarotApp {
             constructor(cardsData) {
                 this.cardsData = Object.entries(cardsData);
+                this.cardsEntries = Object.entries(cardsData);
                 this.cardContainer = document.getElementById('card-container');
                 this.selectedRow = document.getElementById('selected-row');
                 this.promptElement = document.getElementById('prompt');
                 this.fateButton = document.getElementById('fateButton');
+
 
                 this.clickCount = 0;
                 this.selectedCardsList = [];
@@ -306,10 +308,12 @@
              */
             renderCards() {
                 const selectedCards = this.getRandomCards(this.cardsData, CONFIG.TOTAL_CARDS);
+                this.currentCards = selectedCards;
 
                 selectedCards.forEach((card, index) => {
                     const wrapper = this.createCardWrapper();
                     const cardElement = this.createCardElement(index);
+                    cardElement.dataset.index = index;
                     const cardFront = this.createCardFront(card[0]);
                     const cardBack = this.createCardBack();
 
@@ -374,7 +378,13 @@
                         card.classList.add('card-flipped-glow');
                     }, CONFIG.FLIP_DELAY);
 
-                    this.selectedCardsList.push({card, wrapper});
+                    const idx = Number(card.dataset.index);
+                    const [key, data] = this.currentCards[idx];
+                    this.selectedCardsList.push({
+                        key:     key,
+                        title:   data.title,
+                        meaning: data.meaning
+                    });
 
                     if (this.clickCount === CONFIG.SELECT_CARDS) {
                         this.promptElement.classList.add('fade-out');
@@ -501,9 +511,18 @@
              */
             setupButtonHandler() {
                 this.fateButton.addEventListener('click', () => {
-                    alert('Ваше предначертание раскрывается...');
-                    // Здесь можно добавить логику для показа результатов
-                });
+                    // Формируем массив объектов {title, meaning}
+                    const payload = {
+                    selectedCards: this.selectedCardsList.map(c => ({
+                        title:   c.title,
+                        meaning: c.meaning
+                    }))
+                    };
+                    // Отправляем бот-клиенту
+                    Telegram.WebApp.sendData(JSON.stringify(payload));
+                    // Закрываем WebApp
+                    Telegram.WebApp.close();
+                }
             }
 
             /**
