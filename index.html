@@ -511,20 +511,37 @@
              * Настраивает обработчик клика на кнопку
              */
             setupButtonHandler() {
-                this.fateButton.addEventListener('click', () => {
-                    // Формируем массив объектов {title, meaning}
-                    const payload = {
-                    selectedCards: this.selectedCardsList.map(c => ({
-                        title:   c.title,
-                        meaning: c.meaning,
-                        chain_meaning: c.chain_meaning
-                    }))
+              this.fateButton.addEventListener('click', () => {
+                // Собираем все выбранные заголовки
+                const selectedTitles = this.selectedCardsList.map(c => c.title);
+
+                // Формируем payload, фильтруя chain_meaning
+                const payload = {
+                  selectedCards: this.selectedCardsList.map(c => {
+                    const { title, meaning, chain_meaning } = c;
+                    let filteredChain = {};
+
+                    // Если поле есть, оставляем только сведения о выбранных картах
+                    if (chain_meaning && typeof chain_meaning === 'object') {
+                      selectedTitles.forEach(sel => {
+                        if (chain_meaning.hasOwnProperty(sel)) {
+                          filteredChain[sel] = chain_meaning[sel];
+                        }
+                      });
+                    }
+
+                    return {
+                      title,
+                      meaning,
+                      // Если после фильтрации ничего не осталось, можно опустить поле
+                      ...(Object.keys(filteredChain).length && { chain_meaning: filteredChain })
                     };
-                    // Отправляем бот-клиенту
-                    Telegram.WebApp.sendData(JSON.stringify(payload));
-                    // Закрываем WebApp
-                    Telegram.WebApp.close();
-                })
+                  })
+                };
+
+                Telegram.WebApp.sendData(JSON.stringify(payload));
+                Telegram.WebApp.close();
+              });
             }
 
             /**
