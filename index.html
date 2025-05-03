@@ -383,7 +383,8 @@
                         card,                // сам <div class="card">
                         wrapper,             // его обёртка <div class="card-wrapper">
                         title: data.title,   // для передачи боту
-                        meaning: data.meaning
+                        meaning: data.meaning,
+                        chain_meaning: data.chain_meaning
                     });
 
                     if (this.clickCount === CONFIG.SELECT_CARDS) {
@@ -515,7 +516,8 @@
                     const payload = {
                     selectedCards: this.selectedCardsList.map(c => ({
                         title:   c.title,
-                        meaning: c.meaning
+                        meaning: c.meaning,
+                        chain_meaning: c.chain_meaning
                     }))
                     };
                     // Отправляем бот-клиенту
