@@ -540,7 +540,8 @@
                 };
 
                 Telegram.WebApp.sendData(JSON.stringify(payload));
-                Telegram.WebApp.close();
+                setTimeout(() => Telegram.WebApp.close(), 100);
+                // Telegram.WebApp.close();
               });
             }
 
