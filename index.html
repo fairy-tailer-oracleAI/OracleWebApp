@@ -258,6 +258,8 @@
                 .then(data => {
                     const app = new TarotApp(data);
                     app.init();
+                    if (window.Telegram && Telegram.WebApp) {
+                        Telegram.WebApp.ready();
                 })
                 .catch(error => console.error('Ошибка загрузки карт:', error));
         }
@@ -364,8 +366,6 @@
                 cardBack.className = 'card-back';
                 return cardBack;
             }
-
-            Telegram.WebApp.ready();
 
             /**
              * Обработчик клика на карту
