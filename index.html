@@ -514,14 +514,37 @@
              * Настраивает обработчик клика на кнопку
              */
             setupButtonHandler() {
-                this.fateButton.addEventListener('click', () => {
-                const payload = this.selectedCardsList.map(c => c.title); // Только title карт
-            
-                // Формируем короткую строку для inline query
-                const queryText = payload.join(", ");
-            
-                Telegram.WebApp.switchInlineQuery(queryText);
+              this.fateButton.addEventListener('click', () => {
+                // Собираем все выбранные заголовки
+                const selectedTitles = this.selectedCardsList.map(c => c.title);
+
+                // Формируем payload, фильтруя chain_meaning
+                const payload = {
+                  selectedCards: this.selectedCardsList.map(c => {
+                    const { title, meaning, chain_meaning } = c;
+                    let filteredChain = {};
+
+                    // Если поле есть, оставляем только сведения о выбранных картах
+                    if (chain_meaning && typeof chain_meaning === 'object') {
+                      selectedTitles.forEach(sel => {
+                        if (chain_meaning.hasOwnProperty(sel)) {
+                          filteredChain[sel] = chain_meaning[sel];
+                        }
+                      });
+                    }
+
+                    return {
+                      title,
+                      meaning,
+                      // Если после фильтрации ничего не осталось, можно опустить поле
+                      ...(Object.keys(filteredChain).length && { chain_meaning: filteredChain })
+                    };
+                  })
+                };
+
+                Telegram.WebApp.sendData(JSON.stringify(payload));
                 setTimeout(() => Telegram.WebApp.close(), 1000);
+                // Telegram.WebApp.close();
               });
             }
 
