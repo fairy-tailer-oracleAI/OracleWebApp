@@ -260,6 +260,7 @@
                     app.init();
                     if (window.Telegram && Telegram.WebApp) {
                         Telegram.WebApp.ready();
+                    }
                 })
                 .catch(error => console.error('Ошибка загрузки карт:', error));
         }
