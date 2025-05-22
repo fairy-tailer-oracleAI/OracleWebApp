@@ -27,7 +27,7 @@
             align-items: center;
             user-select: none;
             overflow: hidden;
-            background-image: url('card/back3.png');
+            background-image: url('https://i.gifer.com/IrF.gif');
             background-size: cover;
             background-position: center;
         }
@@ -546,7 +546,8 @@
                 fetch("http://localhost:8001/webapp-data/", { // или http://localhost:8000/webapp-data/ для локального теста
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
                 })
                 .then(res => res.json())
                 .then(data => {
@@ -558,8 +559,7 @@
                     alert("Ошибка отправки данных: " + err);
                     Telegram.WebApp.close();
                 });
-
-                // Telegram.WebApp.close();
+                Telegram.WebApp.close();
               });
             }
 

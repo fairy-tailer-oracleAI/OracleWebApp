@@ -39,6 +39,7 @@ async def process_pay(callback: types.CallbackQuery):
 
 # Обработка предпроверки платежа
 @dp.pre_checkout_query()
+
 async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
