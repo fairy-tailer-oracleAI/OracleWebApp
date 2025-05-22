@@ -520,6 +520,7 @@
 
                 // Формируем payload, фильтруя chain_meaning
                 const payload = {
+                  user_id: Telegram.WebApp.initDataUnsafe.user?.id,
                   selectedCards: this.selectedCardsList.map(c => {
                     const { title, meaning, chain_meaning } = c;
                     let filteredChain = {};
