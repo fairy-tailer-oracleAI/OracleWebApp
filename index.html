@@ -542,8 +542,22 @@
                   })
                 };
 
-                Telegram.WebApp.sendData(JSON.stringify(payload));
-                setTimeout(() => Telegram.WebApp.close(), 1000);
+                fetch("http://localhost:8001/webapp-data/", { // или http://localhost:8000/webapp-data/ для локального теста
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    // Можно показать результат, если надо
+                    Telegram.WebApp.close();
+                })
+                .catch(err => {
+                    // Можешь показать ошибку, если надо
+                    alert("Ошибка отправки данных: " + err);
+                    Telegram.WebApp.close();
+                });
+
                 // Telegram.WebApp.close();
               });
             }
