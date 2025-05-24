@@ -559,7 +559,7 @@
                     alert("Ошибка отправки данных: " + err);
                     Telegram.WebApp.close();
                 });
-                Telegram.WebApp.close();
+                setTimeout(() => Telegram.WebApp.close(), 1000);
               });
             }
 
