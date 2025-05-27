@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>Гадание на картах Таро</title>
 
     <!-- Telegram WebApp SDK -->
@@ -544,12 +543,11 @@
                   })
                 };
 
-                fetch("http://185.84.163.127:8080/webapp-data/", { // или http://localhost:8000/webapp-data/ для локального теста
+                fetch("https://stage.ai-prorok.webtm.ru/webapp-data/", { // или http://localhost:8000/webapp-data/ для локального теста
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(payload),
-                    // credentials: 'include',
-                    referrerPolicy: "unsafe-url" 
+                    credentials: 'include'
                 })
                 .then(res => res.json())
                 .then(data => {
