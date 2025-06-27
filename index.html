@@ -213,7 +213,7 @@
     <div class="prompt" id="prompt">Выберите 3 карты</div>
     <div class="card-container" id="card-container"></div>
     <div class="selected-row" id="selected-row"></div>
-    <button class="bubbly-button" id="fateButton">🔮Узнать предначертанное🔮</button>
+    <button class="bubbly-button" id="fateButton" disabled>🔮Узнать предначертанное🔮</button>
 
 
 
@@ -517,6 +517,8 @@
              * Показывает кнопку "Узнать предначертанное"
              */
             showFateButton() {
+                this.fateButton.disabled = false;               // убираем блокировку
+                this.fateButton.style.pointerEvents = 'auto';
                 this.fateButton.classList.add('visible', 'animate');
             }
 
@@ -525,6 +527,9 @@
              */
             setupButtonHandler() {
               this.fateButton.addEventListener('click', () => {
+                this.fateButton.disabled = true;
+                this.fateButton.style.pointerEvents = 'none';
+                this.fateButton.classList.remove('animate');
                 // Собираем все выбранные заголовки
                 const selectedTitles = this.selectedCardsList.map(c => c.title);
 
@@ -570,7 +575,7 @@
                     Telegram.WebApp.close();
                 });
                 setTimeout(() => Telegram.WebApp.close(), 800);
-              });
+              },{ once: true }););
             }
 
             /**
