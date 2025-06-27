@@ -219,15 +219,25 @@
 
     <script>        
         // Конфигурация приложения
-        const CONFIG = {
-            TOTAL_CARDS: 8,       // Всего карт для выбора
-            SELECT_CARDS: 3,      // Сколько карт нужно выбрать
+        const BASE = {
             FLIP_DELAY: 300,      // Задержка перед свечением карты (мс)
             PROMPT_FADE_DELAY: 500, // Задержка перед исчезновением подсказки (мс)
             CARD_MOVE_DELAY: 100,  // Задержка перед началом движения карты (мс)
             BUTTON_SHOW_DELAY: 300 // Задержка перед показом кнопки (мс)
         };
 
+        const params = new URLSearchParams(location.search);
+        const total  = parseInt(params.get('total') , 10) || 8;
+        const select = parseInt(params.get('select'), 10) || 3;
+
+        const CONFIG = {
+            TOTAL_CARDS: total,
+            SELECT_CARDS: select,
+            ...BASE
+        };
+
+        console.log("CONFIG =", CONFIG);
+        
         window.addEventListener('load', () => {
           const preloader = document.getElementById('preloader');
 
