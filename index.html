@@ -210,7 +210,7 @@
       <img src="card/preloader.gif" alt="Загрузка..." class="preloader-image">
     </div>
     <!-- Элементы интерфейса -->
-    <div class="prompt" id="prompt">Выберите 3 карты</div>
+    <div class="prompt" id="prompt"></div>
     <div class="card-container" id="card-container"></div>
     <div class="selected-row" id="selected-row"></div>
     <button class="bubbly-button" id="fateButton" disabled>🔮Узнать предначертанное🔮</button>
@@ -237,6 +237,14 @@
         };
 
         console.log("CONFIG =", CONFIG);
+
+        const promptEl = document.getElementById('prompt');
+
+        if (CONFIG.SELECT_CARDS === 1) {
+          promptEl.textContent = 'Выберите 1 карту';
+        } else if (CONFIG.SELECT_CARDS === 3) {
+          promptEl.textContent = 'Выберите 3 карты';
+        }
         
         window.addEventListener('load', () => {
           const preloader = document.getElementById('preloader');
