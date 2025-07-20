@@ -566,6 +566,20 @@
                   })
                 };
 
+                const cardElements = this.selectedCardsList.map(c => c.card);
+                const base64Promises = cardElements.map(el => {
+                  const bg = el.querySelector('.card-front').style.backgroundImage;
+                  // "url('path/to/img.png')" → "path/to/img.png"
+                  const url = bg.slice(5, -2);
+                  return fetch(url)
+                    .then(r => r.blob())
+                    .then(blob => new Promise(res => {
+                      const reader = new FileReader();
+                      reader.onload = () => res(reader.result);
+                      reader.readAsDataURL(blob);
+                    }));
+                });
+
                 fetch("https://stage.ai-prorok.webtm.ru/webapp-data/", { // или http://localhost:8000/webapp-data/ для локального теста
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
