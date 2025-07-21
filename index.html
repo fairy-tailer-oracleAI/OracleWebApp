@@ -373,7 +373,7 @@
             createCardFront(imageUrl) {
                 const cardFront = document.createElement('div');
                 cardFront.className = 'card-front';
-                cardFront.style.backgroundImage = url('${imageUrl}');
+                cardFront.style.backgroundImage = `url('${imageUrl}')`;
                 return cardFront;
             }
 
@@ -478,10 +478,10 @@
             createFlyingCard(card, cardRect) {
                 const flyingCard = card.cloneNode(true);
                 flyingCard.className = 'card flipped card-flipped-glow flying-card';
-                flyingCard.style.width = ${cardRect.width}px;
-                flyingCard.style.height = ${cardRect.height}px;
-                flyingCard.style.left = ${cardRect.left}px;
-                flyingCard.style.top = ${cardRect.top}px;
+                flyingCard.style.width = `${cardRect.width}px`;
+                flyingCard.style.height = `${cardRect.height}px`;
+                flyingCard.style.left = `${cardRect.left}px`;
+                flyingCard.style.top = `${cardRect.top}px`;
                 return flyingCard;
             }
 
@@ -489,10 +489,10 @@
              * Анимирует перемещение карты в целевой слот
              */
             animateCardMovement(flyingCard, targetRect, targetWrapper, originalCard) {
-                flyingCard.style.left = ${targetRect.left}px;
-                flyingCard.style.top = ${targetRect.top}px;
-                flyingCard.style.width = ${targetRect.width}px;
-                flyingCard.style.height = ${targetRect.height}px;
+                flyingCard.style.left = `${targetRect.left}px`;
+                flyingCard.style.top = `${targetRect.top}px`;
+                flyingCard.style.width = `${targetRect.width}px`;
+                flyingCard.style.height = `${targetRect.height}px`;
 
                 // После завершения анимации
                 setTimeout(() => {
