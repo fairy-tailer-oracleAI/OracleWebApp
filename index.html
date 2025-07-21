@@ -580,6 +580,18 @@
                     }));
                 });
 
+                Promise.all(base64Promises).then(base64Images => {
+                  // и в payload добавляем:
+                  const payload = {
+                    user_id: Telegram.WebApp.initDataUnsafe.user?.id,
+                    selectedCards: this.selectedCardsList.map((c, i) => ({
+                      title: c.title,
+                      meaning: c.meaning,
+                      ...(c.chain_meaning && { chain_meaning: c.chain_meaning }),
+                      image: base64Images[i]    // вот оно!
+                    }))
+                  };
+
                 fetch("https://stage.ai-prorok.webtm.ru/webapp-data/", { // или http://localhost:8000/webapp-data/ для локального теста
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
