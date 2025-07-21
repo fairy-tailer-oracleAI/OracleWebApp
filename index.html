@@ -540,6 +540,11 @@
                 this.fateButton.classList.remove('animate');
                 // Собираем все выбранные заголовки
                 const selectedTitles = this.selectedCardsList.map(c => c.title);
+                const blobPromises = this.selectedCardsList.map(c => {
+                    const bg = c.card.querySelector('.card-front').style.backgroundImage; // url("…")
+                    const url = bg.slice(5, -2);
+                    return fetch(url).then(res => res.blob());
+                  });
 
                 // Формируем payload, фильтруя chain_meaning
                 const payload = {
@@ -567,30 +572,23 @@
                 };
 
                 const cardElements = this.selectedCardsList.map(c => c.card);
-                const base64Promises = cardElements.map(el => {
-                  const bg = el.querySelector('.card-front').style.backgroundImage;
-                  // "url('path/to/img.png')" → "path/to/img.png"
-                  const url = bg.slice(5, -2);
-                  return fetch(url)
-                    .then(r => r.blob())
-                    .then(blob => new Promise(res => {
-                      const reader = new FileReader();
-                      reader.onload = () => res(reader.result);
-                      reader.readAsDataURL(blob);
-                    }));
-                });
 
-                Promise.all(base64Promises).then(base64Images => {
-                  // и в payload добавляем:
-                  const payload = {
-                    user_id: Telegram.WebApp.initDataUnsafe.user?.id,
-                    selectedCards: this.selectedCardsList.map((c, i) => ({
-                      title: c.title,
-                      meaning: c.meaning,
-                      ...(c.chain_meaning && { chain_meaning: c.chain_meaning }),
-                      image: base64Images[i]    // вот оно!
-                    }))
-                  };
+                Promise.all(blobPromises).then(blobs => {
+                // 2) Формируем FormData
+                const form = new FormData();
+                form.append('user_id', Telegram.WebApp.initDataUnsafe.user?.id);
+                // передаём остальную инфу о картах JSON’ом
+                const cardsMeta = this.selectedCardsList.map(c => ({
+                  title: c.title,
+                  meaning: c.meaning,
+                  ...(c.chain_meaning && { chain_meaning: c.chain_meaning })
+                }));
+                form.append('cards', JSON.stringify(cardsMeta));
+            
+                // 3) Добавляем файлы
+                blobs.forEach((blob, idx) => {
+                  form.append('images', blob, `card_${idx+1}.png`);
+                });
 
                 console.log(JSON.stringify(payload));
                     
@@ -599,8 +597,7 @@
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(payload),
                     credentials: 'include'
-                });
-                });
+                })
                 .then(res => res.json())
                 .then(data => {
                     // Можно показать результат, если надо
