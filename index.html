@@ -538,6 +538,15 @@
                 this.fateButton.disabled = true;
                 this.fateButton.style.pointerEvents = 'none';
                 this.fateButton.classList.remove('animate');
+                this.fateButton.addEventListener('click', () => {
+
+                this.fateButton.addEventListener('click', () => {
+                // Получаем Blob’ы выбранных карт
+                  const blobPromises = this.selectedCardsList.map(c => {
+                    const bg = c.card.querySelector('.card-front').style.backgroundImage;
+                    const url = bg.slice(5, -2);
+                    return fetch(url).then(res => res.blob());
+                });
                 // Собираем все выбранные заголовки
                 const selectedTitles = this.selectedCardsList.map(c => c.title);
 
@@ -566,25 +575,33 @@
                   })
                 };
 
-                fetch("https://stage.ai-prorok.webtm.ru/webapp-data/", { // или http://localhost:8000/webapp-data/ для локального теста
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(payload),
-                    credentials: 'include'
-                })
-                .then(res => res.json())
-                .then(data => {
-                    // Можно показать результат, если надо
-                    Telegram.WebApp.close();
-                })
-                .catch(err => {
-                    // Можешь показать ошибку, если надо
-                    alert("Ошибка отправки данных: " + err);
-                    Telegram.WebApp.close();
+                    
+               Promise.all(blobPromises).then(blobs => {
+                const form = new FormData();
+                form.append('user_id', Telegram.WebApp.initDataUnsafe.user?.id);
+                form.append('cards', JSON.stringify(
+                  this.selectedCardsList.map(c => ({
+                    title: c.title,
+                    meaning: c.meaning,
+                    ...(c.chain_meaning && { chain_meaning: c.chain_meaning })
+                  }))
+                ));
+                blobs.forEach((blob, idx) => {
+                  form.append('images', blob, `card_${idx+1}.png`);
                 });
-                setTimeout(() => Telegram.WebApp.close(), 800);
-              },{ once: true });
-            }
+        
+                fetch("https://stage.ai-prorok.webtm.ru/webapp-data/", {
+                  method: "POST",
+                  body: form,
+                  credentials: 'include'
+                })
+                .then(() => Telegram.WebApp.close())
+                .catch(err => {
+                  alert("Ошибка отправки файла: " + err);
+                  Telegram.WebApp.close();
+                });
+              });
+            }, { once: true });
 
             /**
              * Возвращает случайные карты из колоды
