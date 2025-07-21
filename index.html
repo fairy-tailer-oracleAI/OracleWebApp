@@ -399,13 +399,14 @@
                     }, CONFIG.FLIP_DELAY);
 
                     const idx = Number(card.dataset.index);
-                    const [key, data] = this.currentCards[idx];
+                    const [image_path, data] = this.currentCards[idx];
                     this.selectedCardsList.push({
                         card,                // сам <div class="card">
                         wrapper,             // его обёртка <div class="card-wrapper">
                         title: data.title,   // для передачи боту
                         meaning: data.meaning,
-                        chain_meaning: data.chain_meaning
+                        chain_meaning: data.chain_meaning,
+                        image_path
                     });
 
                     if (this.clickCount === CONFIG.SELECT_CARDS) {
@@ -545,7 +546,7 @@
                 const payload = {
                   user_id: Telegram.WebApp.initDataUnsafe.user?.id,
                   selectedCards: this.selectedCardsList.map(c => {
-                    const { title, meaning, chain_meaning } = c;
+                    const { title, meaning, chain_meaning, image_path } = c;
                     let filteredChain = {};
 
                     // Если поле есть, оставляем только сведения о выбранных картах
@@ -561,7 +562,8 @@
                       title,
                       meaning,
                       // Если после фильтрации ничего не осталось, можно опустить поле
-                      ...(Object.keys(filteredChain).length && { chain_meaning: filteredChain })
+                      ...(Object.keys(filteredChain).length && { chain_meaning: filteredChain }),
+                      image_path
                     };
                   })
                 };
