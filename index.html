@@ -592,6 +592,8 @@
                     }))
                   };
 
+                console.log(JSON.stringify(payload));
+                    
                 fetch("https://stage.ai-prorok.webtm.ru/webapp-data/", { // или http://localhost:8000/webapp-data/ для локального теста
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
