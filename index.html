@@ -572,22 +572,23 @@
                   })
                 };
 
-                fetch("https://stage.ai-prorok.webtm.ru/webapp-data/", { // или http://localhost:8000/webapp-data/ для локального теста
+                const API_BASE = window.location.origin.replace(/\/$/, "");
+                const API_URL  = API_BASE + "/webapp-data/";
+                
+                fetch(API_URL, {
                     method: "POST",
-                    headers: {"Content-Type": "application/json"},
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload),
-                    credentials: 'include'
+                    credentials: "include"
                 })
-                .then(res => res.json())
-                .then(data => {
-                    // Можно показать результат, если надо
-                    Telegram.WebApp.close();
-                })
-                .catch(err => {
-                    // Можешь показать ошибку, если надо
-                    alert("Ошибка отправки данных: " + err);
-                    Telegram.WebApp.close();
-                });
+                    .then(res => res.json())
+                    .then(data => {
+                        Telegram.WebApp.close();
+                    })
+                    .catch(err => {
+                        alert("Ошибка отправки данных: " + err);
+                        Telegram.WebApp.close();
+                    });
                 setTimeout(() => Telegram.WebApp.close(), 800);
               },{ once: true });
             }
