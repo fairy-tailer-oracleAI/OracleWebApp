@@ -572,14 +572,14 @@
                   })
                 };
 
-                const API_BASE = window.location.origin.replace(/\/$/, "");
-                const API_URL  = API_BASE + "/webapp-data/";
-                
-                fetch(API_URL, {
+                const apiBase = window.location.origin;  // будет https://stage.ai-prorok.webtm.ru или https://stage-test.ai-prorok.webtm.ru
+
+                fetch(`${apiBase}/webapp-data/`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(payload),
-                    credentials: "include"
+                    // для same-origin CORS не нужен, но можно оставить
+                    credentials: 'include'
                 })
                     .then(res => res.json())
                     .then(data => {
