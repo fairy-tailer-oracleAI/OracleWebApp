@@ -26,20 +26,16 @@
             background-size: cover;
             background-position: center;
         }
-
     </style>
 </head>
 <body>
     <script>
-
         // Инициализация Telegram WebApp
         document.addEventListener('DOMContentLoaded', () => {
             if (window.Telegram && window.Telegram.WebApp) {
                 Telegram.WebApp.expand(); // Раскрываем на весь экран
                 Telegram.WebApp.ready();
             }
-
-            console.log("CONFIG =", CONFIG);
         });
     </script>
 </body>
