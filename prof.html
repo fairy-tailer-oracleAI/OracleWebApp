@@ -4,9 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Гадание на картах Таро</title>
+
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-</head>>
+
+    <style>
+        /* Базовые сбросы стилей */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Основные стили страницы */
+        body {
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            user-select: none;
+            overflow: hidden;
+            background-image: url('card/IrF.gif');
+            background-size: cover;
+            background-position: center;
+        }
+
+    </style>
+</head>
 <body>
-<h1> Я ЛЮЛБЮ ДЕНЬГИ МАЗАФАКА </h1>>
+    <script>
+
+        // Инициализация Telegram WebApp
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.Telegram && window.Telegram.WebApp) {
+                Telegram.WebApp.expand(); // Раскрываем на весь экран
+                Telegram.WebApp.ready();
+            }
+
+            console.log("CONFIG =", CONFIG);
+        });
+    </script>
 </body>
 </html>
