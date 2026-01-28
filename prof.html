@@ -361,6 +361,50 @@
             }
         }
 
+        .user-status {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #FFD700, #FFA500); /* Золотой градиент */
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                0 0 15px rgba(255, 215, 0, 0.5);
+            border: 2px solid white;
+            margin-left: 10px;
+            font-size: 18px;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Если хочешь картинку вместо эмодзи */
+        .user-status.status-premium {
+            background: url('profile/statuses/statprem.png') center/cover no-repeat;
+        }
+
+        /* Для разных статусов */
+        .user-status.status-vip {
+            background: linear-gradient(135deg, #FF0000, #FF4500);
+        }
+
+        .user-status.status-newbie {
+            background: linear-gradient(135deg, #00CED1, #20B2AA);
+        }
+
+        /* Анимация для статуса */
+        @keyframes statusPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .user-status {
+            animation: statusPulse 2s infinite ease-in-out;
+        }
+
         /* Адаптивность для очень маленьких экранов */
         @media (max-width: 360px) {
             .balance-window {
@@ -380,6 +424,7 @@
                 margin: 6px 0; /* УМЕНЬШЕНО для очень маленьких */
             }
         }
+
     </style>
 </head>
 <body>
@@ -394,6 +439,8 @@
         <div class="user-name-container">
             <div class="user-name" id="userName">Гость</div>
         </div>
+
+        <div class="user-status status-premium" title="Премиум пользователь"></div>
     </div>
 
     <!-- Стеклянное окошко с балансом - РАСТЯНУТО ПО ШИРИНЕ -->
