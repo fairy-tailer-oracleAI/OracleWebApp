@@ -27,7 +27,7 @@
             background-position: center;
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
+            align-items: center;
             padding: 100px 20px 20px;
         }
 
@@ -135,7 +135,7 @@
             pointer-events: none;
         }
 
-        /* Заголовок баланса */
+        /* Заголовок баланса - ЦЕНТРИРОВАННЫЙ */
         .balance-label {
             font-size: 16px;
             color: rgba(255, 255, 255, 0.95);
@@ -143,14 +143,16 @@
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
             display: flex;
             align-items: center;
+            justify-content: center; /* ЦЕНТРИРУЕМ */
             gap: 12px;
+            width: 100%;
         }
 
-        /* Иконка для баланса - ЗВЕЗДА */
-        .tarif {
-            width: 22px;
-            height: 22px;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
+        /* Иконка для баланса - КРАСИВАЯ ЗВЕЗДА */
+        .balance-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #FFD700, #FFA500, #FF8C00);
             display: inline-block;
             position: relative;
             transform: rotate(20deg);
@@ -167,23 +169,34 @@
                 39% 35%
             );
             box-shadow:
-                0 2px 6px rgba(0, 0, 0, 0.4),
-                0 0 15px rgba(255, 215, 0, 0.5);
+                0 2px 8px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(255, 215, 0, 0.7),
+                inset 0 0 10px rgba(255, 255, 255, 0.3);
             animation: starGlow 2s infinite alternate;
+            filter: brightness(1.1);
         }
 
         /* Анимация мерцания звезды */
         @keyframes starGlow {
             0% {
                 box-shadow:
-                    0 2px 6px rgba(0, 0, 0, 0.4),
-                    0 0 15px rgba(255, 215, 0, 0.5);
+                    0 2px 8px rgba(0, 0, 0, 0.5),
+                    0 0 20px rgba(255, 215, 0, 0.7),
+                    inset 0 0 10px rgba(255, 255, 255, 0.3);
                 transform: rotate(20deg) scale(1);
+            }
+            50% {
+                box-shadow:
+                    0 2px 10px rgba(0, 0, 0, 0.6),
+                    0 0 25px rgba(255, 215, 0, 0.9),
+                    inset 0 0 15px rgba(255, 255, 255, 0.5);
+                transform: rotate(20deg) scale(1.05);
             }
             100% {
                 box-shadow:
-                    0 2px 8px rgba(0, 0, 0, 0.5),
-                    0 0 25px rgba(255, 215, 0, 0.8);
+                    0 2px 12px rgba(0, 0, 0, 0.7),
+                    0 0 30px rgba(255, 215, 0, 1),
+                    inset 0 0 20px rgba(255, 255, 255, 0.7);
                 transform: rotate(20deg) scale(1.1);
             }
         }
@@ -193,23 +206,27 @@
             font-size: 36px;
             font-weight: bold;
             color: white;
-            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.7);
-            margin-bottom: 25px;
+            text-shadow:
+                0 3px 10px rgba(0, 0, 0, 0.7),
+                0 0 15px rgba(255, 215, 0, 0.3);
+            margin-bottom: 0px; /* УМЕНЬШЕНО: было 25px */
             display: flex;
             align-items: center;
-            gap: 12px;
-            justify-content: center; /* Центрируем баланс */
+            gap: 10px;
+            justify-content: center;
             width: 100%;
         }
 
         /* Валюта */
         .balance-currency {
-            font-size: 20px;
+            font-size: 22px;
             color: #FFD700;
             text-shadow:
                 0 2px 6px rgba(0, 0, 0, 0.6),
-                0 0 10px rgba(255, 215, 0, 0.4);
+                0 0 12px rgba(255, 215, 0, 0.5);
             font-weight: bold;
+            position: relative;
+            top: -2px;
         }
 
         /* Кнопка пополнения */
@@ -288,11 +305,9 @@
                 rgba(255, 255, 255, 0.4),
                 transparent
             );
-            margin: 20px 0;
+            margin: 0px 0; /* УМЕНЬШЕНО: было 20px 0 */
             width: 100%;
         }
-
-
 
         /* Эффект внутреннего свечения */
         .balance-window::after {
@@ -314,7 +329,6 @@
 
         /* Контейнер для содержимого баланса (центрирование) */
         .balance-content {
-
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -329,10 +343,20 @@
 
             .balance-amount {
                 font-size: 32px;
+                margin-bottom: 0px; /* УМЕНЬШЕНО для мобильных */
+            }
+
+            .balance-icon {
+                width: 20px;
+                height: 20px;
+            }
+
+            .balance-label {
+                font-size: 15px;
             }
 
             .top-up-button {
-                padding: 14px 20px;
+                padding: 10px 20px;
                 font-size: 16px;
             }
         }
@@ -345,10 +369,15 @@
 
             .balance-amount {
                 font-size: 28px;
+                margin-bottom: 0px; /* УМЕНЬШЕНО для очень маленьких */
             }
 
             .balance-label {
-                font-size: 15px;
+                font-size: 14px;
+            }
+
+            .balance-divider {
+                margin: 6px 0; /* УМЕНЬШЕНО для очень маленьких */
             }
         }
     </style>
@@ -371,12 +400,11 @@
     <div class="balance-window">
         <div class="balance-content">
             <div class="balance-label">
-                <span class="balance-icon"></span>
-                Ваш баланс
+                <span class="balance-icon"></span>Ваш баланс
             </div>
 
             <div class="balance-amount">
-                1 500 <span class="balance-currency">₽</span>
+                1 500 <span class="balance-currency"></span>
             </div>
 
             <div class="balance-divider"></div>
