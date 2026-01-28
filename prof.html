@@ -361,48 +361,223 @@
             }
         }
 
+        /* Стиль для статуса с плавным внутренним свечением */
         .user-status {
-            width: 32px;
-            height: 32px;
-            min-width: 32px;
+            width: 30px;
+            height: 30px;
+            min-width: 30px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #FFD700, #FFA500); /* Золотой градиент */
-            box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.3),
-                0 0 15px rgba(255, 215, 0, 0.5);
-            border: 2px solid white;
-            margin-left: 10px;
-            font-size: 18px;
-            color: white;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            position: relative;
+
+            /* Ближе к нику - уменьшен отступ */
+            margin-left: 6px;
+
+            /* Для картинки */
+            background: url('profile/statuses/statprem.png') center/cover no-repeat;
+            background-color: rgba(255, 255, 255, 0.08); /* Очень легкая подложка */
+
+            /* Слегка размываем сам элемент для плавности */
+            filter: blur(0.3px);
         }
 
-        /* Если хочешь картинку вместо эмодзи */
-        .user-status.status-premium {
-            background: url('profile/statuses/statprem.png') center/cover no-repeat;
+        /* Эффект внутреннего свечения - плавный и размытый */
+        .user-status::before {
+            content: '';
+            position: absolute;
+            top: -10px; /* Увеличиваем область для размытия */
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50%;
+
+            /* Размытое мягкое свечение */
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 255, 255, 0.7) 0%,
+                rgba(255, 255, 255, 0.4) 20%,
+                rgba(255, 255, 255, 0.2) 40%,
+                rgba(255, 255, 255, 0.05) 60%,
+                transparent 80%
+            );
+
+            z-index: 1;
+            pointer-events: none;
+
+            /* Сильное размытие для плавных границ */
+            filter: blur(6px);
+
+            /* Очень плавная анимация */
+            animation: innerGlow 4s infinite ease-in-out;
+        }
+
+        /* Еще один слой свечения для объема */
+        .user-status::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+
+            /* Второй слой свечения */
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 255, 255, 0.5) 0%,
+                rgba(255, 255, 255, 0.2) 30%,
+                rgba(255, 255, 255, 0.05) 50%,
+                transparent 70%
+            );
+
+            z-index: 2;
+            pointer-events: none;
+
+            /* Размытие второго слоя */
+            filter: blur(4px);
+
+            /* Анимация с небольшой задержкой */
+            animation: innerGlow2 3s infinite ease-in-out;
+            animation-delay: 0.5s;
+        }
+
+        /* Очень плавная анимация основного свечения */
+        @keyframes innerGlow {
+            0%, 100% {
+                opacity: 0.4;
+                transform: scale(0.9);
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 255, 0.5) 0%,
+                    rgba(255, 255, 255, 0.25) 20%,
+                    rgba(255, 255, 255, 0.1) 40%,
+                    rgba(255, 255, 255, 0.02) 60%,
+                    transparent 80%
+                );
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1);
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 255, 0.8) 0%,
+                    rgba(255, 255, 255, 0.5) 20%,
+                    rgba(255, 255, 255, 0.25) 40%,
+                    rgba(255, 255, 255, 0.05) 60%,
+                    transparent 80%
+                );
+            }
+        }
+
+        /* Плавная анимация второго слоя свечения */
+        @keyframes innerGlow2 {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(0.95);
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 255, 0.4) 0%,
+                    rgba(255, 255, 255, 0.15) 30%,
+                    rgba(255, 255, 255, 0.05) 50%,
+                    transparent 70%
+                );
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.05);
+                background: radial-gradient(
+                    circle at center,
+                    rgba(255, 255, 255, 0.7) 0%,
+                    rgba(255, 255, 255, 0.35) 30%,
+                    rgba(255, 255, 255, 0.1) 50%,
+                    transparent 70%
+                );
+            }
+        }
+
+        /* Fallback эмодзи с мягким свечением */
+        .fallback-emoji {
+            font-size: 16px;
+            color: white;
+            z-index: 3;
+            position: relative;
+
+            /* Мягкая тень для эмодзи */
+            text-shadow:
+                0 0 6px rgba(255, 255, 255, 0.7),
+                0 0 12px rgba(255, 255, 255, 0.3);
+
+            /* Слегка размываем эмодзи для плавности */
+            filter: blur(0.2px);
+        }
+
+        /* Плавная анимация для эмодзи */
+        .fallback-emoji {
+            animation: emojiGlow 3s infinite ease-in-out;
+        }
+
+        @keyframes emojiGlow {
+            0%, 100% {
+                opacity: 0.9;
+                transform: scale(0.98);
+                text-shadow:
+                    0 0 4px rgba(255, 255, 255, 0.6),
+                    0 0 8px rgba(255, 255, 255, 0.2);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.02);
+                text-shadow:
+                    0 0 8px rgba(255, 255, 255, 0.9),
+                    0 0 16px rgba(255, 255, 255, 0.4);
+            }
         }
 
         /* Для разных статусов */
+        .user-status.status-premium {
+            background-image: url('profile/statuses/statprem.png');
+        }
+
         .user-status.status-vip {
-            background: linear-gradient(135deg, #FF0000, #FF4500);
+            background-image: url('profile/statuses/vip.png');
         }
 
         .user-status.status-newbie {
-            background: linear-gradient(135deg, #00CED1, #20B2AA);
+            background-image: url('profile/statuses/newbie.png');
         }
 
-        /* Анимация для статуса */
-        @keyframes statusPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
+        /* Для мобильных устройств - уменьшаем эффекты */
+        @media (max-width: 480px) {
+            .user-status {
+                width: 26px;
+                height: 26px;
+                min-width: 26px;
+                margin-left: 5px;
+                filter: blur(0.2px);
+            }
 
-        .user-status {
-            animation: statusPulse 2s infinite ease-in-out;
+            .user-status::before {
+                top: -6px;
+                left: -6px;
+                right: -6px;
+                bottom: -6px;
+                filter: blur(4px);
+            }
+
+            .user-status::after {
+                top: -3px;
+                left: -3px;
+                right: -3px;
+                bottom: -3px;
+                filter: blur(2px);
+            }
+
+            .fallback-emoji {
+                font-size: 14px;
+                filter: blur(0.1px);
+            }
         }
 
         /* Адаптивность для очень маленьких экранов */
