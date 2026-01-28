@@ -92,11 +92,12 @@
             text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
         }
 
-        /* Стеклянное окошко с балансом */
+        /* Стеклянное окошко с балансом - РАСТЯНУТО ПО ШИРИНЕ */
         .balance-window {
             margin-top: 10px;
-            width: 220px;
-            padding: 20px;
+            width: calc(100% - 40px); /* Растягиваем с отступами по бокам */
+            max-width: 500px; /* Максимальная ширина для больших экранов */
+            padding: 25px;
             background: rgba(255, 255, 255, 0.12);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
@@ -136,73 +137,111 @@
 
         /* Заголовок баланса */
         .balance-label {
-            font-size: 15px;
+            font-size: 16px;
             color: rgba(255, 255, 255, 0.95);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
-        /* Иконка для баланса */
-        .balance-icon {
-            width: 18px;
-            height: 18px;
+        /* Иконка для баланса - ЗВЕЗДА */
+        .tarif {
+            width: 22px;
+            height: 22px;
             background: linear-gradient(135deg, #FFD700, #FFA500);
-            border-radius: 50%;
             display: inline-block;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transform: rotate(20deg);
+            clip-path: polygon(
+                50% 0%,
+                61% 35%,
+                98% 35%,
+                68% 57%,
+                79% 91%,
+                50% 70%,
+                21% 91%,
+                32% 57%,
+                2% 35%,
+                39% 35%
+            );
+            box-shadow:
+                0 2px 6px rgba(0, 0, 0, 0.4),
+                0 0 15px rgba(255, 215, 0, 0.5);
+            animation: starGlow 2s infinite alternate;
+        }
+
+        /* Анимация мерцания звезды */
+        @keyframes starGlow {
+            0% {
+                box-shadow:
+                    0 2px 6px rgba(0, 0, 0, 0.4),
+                    0 0 15px rgba(255, 215, 0, 0.5);
+                transform: rotate(20deg) scale(1);
+            }
+            100% {
+                box-shadow:
+                    0 2px 8px rgba(0, 0, 0, 0.5),
+                    0 0 25px rgba(255, 215, 0, 0.8);
+                transform: rotate(20deg) scale(1.1);
+            }
         }
 
         /* Сумма баланса */
         .balance-amount {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
             color: white;
-            text-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.7);
             margin-bottom: 25px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            justify-content: center; /* Центрируем баланс */
+            width: 100%;
         }
 
         /* Валюта */
         .balance-currency {
-            font-size: 18px;
+            font-size: 20px;
             color: #FFD700;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow:
+                0 2px 6px rgba(0, 0, 0, 0.6),
+                0 0 10px rgba(255, 215, 0, 0.4);
+            font-weight: bold;
         }
 
         /* Кнопка пополнения */
         .top-up-button {
             width: 100%;
-            padding: 14px 24px;
+            padding: 16px 28px;
             background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             border: none;
             border-radius: 14px;
             color: white;
-            font-size: 16px;
+            font-size: 17px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             box-shadow:
-                0 5px 20px rgba(106, 17, 203, 0.5),
+                0 5px 25px rgba(106, 17, 203, 0.6),
                 inset 0 1px 0 rgba(255, 255, 255, 0.35);
             position: relative;
             overflow: hidden;
             letter-spacing: 0.5px;
+            margin-top: 10px;
         }
 
         /* Эффект наведения на кнопку */
         .top-up-button:hover {
             transform: translateY(-3px);
             box-shadow:
-                0 8px 25px rgba(106, 17, 203, 0.7),
+                0 8px 30px rgba(106, 17, 203, 0.8),
                 inset 0 1px 0 rgba(255, 255, 255, 0.35);
         }
 
@@ -216,7 +255,7 @@
 
         /* Иконка на кнопке */
         .button-icon {
-            font-size: 20px;
+            font-size: 22px;
         }
 
         /* Блестящий эффект на кнопке */
@@ -249,10 +288,10 @@
                 rgba(255, 255, 255, 0.4),
                 transparent
             );
-            margin: 18px 0;
+            margin: 20px 0;
+            width: 100%;
         }
 
-        /* Информация о тарифе */
 
 
         /* Эффект внутреннего свечения */
@@ -272,6 +311,46 @@
             border-radius: 18px;
             z-index: -1;
         }
+
+        /* Контейнер для содержимого баланса (центрирование) */
+        .balance-content {
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Адаптивность для мобильных */
+        @media (max-width: 480px) {
+            .balance-window {
+                padding: 20px;
+            }
+
+            .balance-amount {
+                font-size: 32px;
+            }
+
+            .top-up-button {
+                padding: 14px 20px;
+                font-size: 16px;
+            }
+        }
+
+        /* Адаптивность для очень маленьких экранов */
+        @media (max-width: 360px) {
+            .balance-window {
+                padding: 18px;
+            }
+
+            .balance-amount {
+                font-size: 28px;
+            }
+
+            .balance-label {
+                font-size: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -288,23 +367,25 @@
         </div>
     </div>
 
-    <!-- Стеклянное окошко с балансом -->
+    <!-- Стеклянное окошко с балансом - РАСТЯНУТО ПО ШИРИНЕ -->
     <div class="balance-window">
-        <div class="balance-label">
-            <span class="balance-icon"></span>
-            Ваш баланс
+        <div class="balance-content">
+            <div class="balance-label">
+                <span class="balance-icon"></span>
+                Ваш баланс
+            </div>
+
+            <div class="balance-amount">
+                1 500 <span class="balance-currency">₽</span>
+            </div>
+
+            <div class="balance-divider"></div>
+
+            <button class="top-up-button" id="topUpButton">
+                <span class="button-icon">💳</span>
+                Пополнить баланс
+            </button>
         </div>
-
-        <div class="balance-amount">
-            1 500 <span class="balance-currency">₽</span>
-        </div>
-
-        <div class="balance-divider"></div>
-
-        <button class="top-up-button" id="topUpButton">
-            <span class="button-icon">💳</span>
-            Пополнить баланс
-        </button>
     </div>
 
     <script>
