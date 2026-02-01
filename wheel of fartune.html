@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гадание на картах Таро</title>
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        /* Базовые сбросы стилей */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Основные стили страницы */
+        body {
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            user-select: none;
+            overflow: hidden;
+            background-image: url('profile/back.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 100px 20px 20px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Инициализация Telegram WebApp
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.Telegram && window.Telegram.WebApp) {
+                Telegram.WebApp.expand();
+                Telegram.WebApp.ready();
+                loadUserData();
+            }
+        });
+    </script>
+</body>
+</html>
