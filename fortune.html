@@ -118,6 +118,15 @@
             deflection: 4
         };
 
+                // Инициализация Telegram WebApp
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.Telegram && window.Telegram.WebApp) {
+                Telegram.WebApp.expand();
+                Telegram.WebApp.ready();
+                loadUserData();
+            }
+        });
+
         let currentRotation = 180;
         let isSpinning = false;
 
