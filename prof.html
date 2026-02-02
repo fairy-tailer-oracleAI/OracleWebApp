@@ -2,456 +2,196 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Гадание на картах Таро</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Колесо Фортуны</title>
 
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
-        /* Базовые сбросы стилей */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* Основные стили страницы */
         body {
             font-family: Arial, sans-serif;
             height: 100vh;
+            overflow: hidden;
+            background: #1a1a1a url('profile/img.png') no-repeat center/cover;
+            display: flex;
+            flex-direction: column;
             user-select: none;
+        }
+
+        /* ТВОЯ СТРУКТУРА: Верхняя секция */
+        .top-section {
+            height: 50vh;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Контейнер для обрезки колеса */
+        .wheel-cut-area {
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            background-image: url('profile/back.png');
-            background-size: cover;
-            background-position: center;
+            position: relative;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 100px 20px 20px;
+            justify-content: center;
         }
 
-        /* Контейнер для пользовательской информации */
-        .user-info-container {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        /* Кружок с аватаром */
-        .avatar-circle {
-            width: 65px;
-            height: 65px;
-            min-width: 50px;
+        .wheel {
+            /* Фиксируем размер круга относительно высоты, чтобы полукруг был ровно 50vh */
+            width: 100vh;
+            height: 100vh;
+            min-width: 100vh;
             border-radius: 50%;
-            overflow: hidden;
-            border: 2px solid #ffffff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            background-color: #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Стили для изображения аватара */
-        .avatar-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Заглушка на случай отсутствия фото */
-        .avatar-placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        /* Контейнер для имени пользователя */
-        .user-name-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        /* Имя пользователя */
-        .user-name {
-            font-size: 20px;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
-        }
-
-        /* Стеклянное окошко с балансом */
-        .balance-window {
-            margin-top: 10px;
-            width: calc(100% - 40px);
-            max-width: 500px;
-            padding: 25px;
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-radius: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow:
-                0 10px 35px rgba(0, 0, 0, 0.25),
-                inset 0 1px 0 rgba(255, 255, 255, 0.25),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.15);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Эффект светящейся рамки */
-        .balance-window::before {
-            content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 18px;
-            padding: 1px;
-            background: linear-gradient(
-                135deg,
-                rgba(255, 255, 255, 0.5),
-                rgba(255, 255, 255, 0.15),
-                rgba(255, 255, 255, 0.5)
+            top: -50vh;
+            background: conic-gradient(
+                #ff4444 0deg 60deg, #44ff44 60deg 120deg,
+                #4444ff 120deg 180deg, #ffff44 180deg 240deg,
+                #ff44ff 240deg 300deg, #44ffff 300deg 360deg
             );
-            -webkit-mask:
-                linear-gradient(#fff 0 0) content-box,
-                linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
+            /* Твои тени и рамки */
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3), inset 0 0 60px rgba(0, 0, 0, 0.7);
+            border: 15px solid #8B4513; /* Коричневая рамка из твоего кода */
+            will-change: transform;
+            transform: rotate(180deg);
         }
 
-        /* Заголовок баланса */
-        .balance-label {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.95);
-            margin-bottom: 12px;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
+        /* КУРСОР-ДОЛЬКА: Вынесен из зоны обрезки */
+        .wheel-pointer {
+            position: absolute;
+            top: 50vh;
+            left: 50%;
+            width: 48px;
+            height: 58px;
+            /* Центрируем и приподнимаем над краем */
+            transform: translate(-50%, -85%);
+
+            background: linear-gradient(135deg, #ffeb3b, #fbc02d);
+            border-radius: 50% 50% 35% 35% / 70% 70% 30% 30%;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+
+            z-index: 100;
+            transform-origin: 50% 100%;
+            transition: transform 0.05s ease-out;
+        }
+
+        /* Нижняя часть для кнопки */
+        .bottom-section {
+            height: 50vh;
             width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* Иконка для баланса - звезда */
-        .balance-icon {
-            width: 24px;
-            height: 24px;
-            background: linear-gradient(135deg, #FFD700, #FFA500, #FF8C00);
-            display: inline-block;
-            position: relative;
-            transform: rotate(20deg);
-            clip-path: polygon(
-                50% 0%,
-                61% 35%,
-                98% 35%,
-                68% 57%,
-                79% 91%,
-                50% 70%,
-                21% 91%,
-                32% 57%,
-                2% 35%,
-                39% 35%
-            );
-            box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.5),
-                0 0 20px rgba(255, 215, 0, 0.7),
-                inset 0 0 10px rgba(255, 255, 255, 0.3);
-            animation: starGlow 2s infinite alternate;
-        }
-
-        /* Анимация мерцания звезды */
-        @keyframes starGlow {
-            0% {
-                box-shadow:
-                    0 2px 8px rgba(0, 0, 0, 0.5),
-                    0 0 20px rgba(255, 215, 0, 0.7),
-                    inset 0 0 10px rgba(255, 255, 255, 0.3);
-                transform: rotate(20deg) scale(1);
-            }
-            100% {
-                box-shadow:
-                    0 2px 12px rgba(0, 0, 0, 0.7),
-                    0 0 30px rgba(255, 215, 0, 1),
-                    inset 0 0 20px rgba(255, 255, 255, 0.7);
-                transform: rotate(20deg) scale(1.1);
-            }
-        }
-
-        /* Сумма баланса */
-        .balance-amount {
-            font-size: 36px;
-            font-weight: bold;
+        .spin-button {
+            padding: 24px 80px;
+            font-size: 28px;
+            background: linear-gradient(135deg, #ff3366, #ff0066);
             color: white;
-            text-shadow:
-                0 3px 10px rgba(0, 0, 0, 0.7),
-                0 0 15px rgba(255, 215, 0, 0.3);
-            margin-bottom: 0px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            justify-content: center;
-            width: 100%;
-        }
-
-        /* Кнопка пополнения */
-        .top-up-button {
-            width: 100%;
-            padding: 16px 28px;
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             border: none;
-            border-radius: 14px;
-            color: white;
-            font-size: 17px;
-            font-weight: bold;
+            border-radius: 50px;
             cursor: pointer;
-            transition: transform 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            box-shadow:
-                0 5px 25px rgba(106, 17, 203, 0.6),
-                inset 0 1px 0 rgba(255, 255, 255, 0.35);
-            margin-top: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 30px rgba(255, 51, 102, 0.5);
+            transition: transform 0.1s;
         }
 
-        /* Эффект нажатия на кнопку */
-        .top-up-button:active {
-            transform: scale(0.95);
-        }
-
-        /* Иконка на кнопке */
-        .button-icon {
-            font-size: 22px;
-        }
-
-        /* Разделительная линия */
-        .balance-divider {
-            height: 1px;
-            background: linear-gradient(90deg,
-                transparent,
-                rgba(255, 255, 255, 0.4),
-                transparent
-            );
-            margin: 0px 0;
-            width: 100%;
-        }
-
-        /* Эффект внутреннего свечения для окошка баланса */
-        .balance-window::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(
-                circle at 30% 20%,
-                rgba(106, 17, 203, 0.1) 0%,
-                transparent 70%
-            );
-            pointer-events: none;
-            border-radius: 18px;
-            z-index: -1;
-        }
-
-        /* Контейнер для содержимого баланса */
-        .balance-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        /* Простой стиль для статуса */
-        .user-status {
-            width: 30px;
-            height: 30px;
-            min-width: 30px;
-            border-radius: 50%;
-            background: url('profile/statuses/statprem.png') center/cover no-repeat;
-            background-color: rgba(255, 255, 255, 0.1);
-            margin-left: 6px;
-        }
-
-        /* Для разных статусов */
-        .user-status.status-premium {
-            background-image: url('profile/statuses/statprem.png');
-        }
-
-        .user-status.status-vip {
-            background-image: url('profile/statuses/vip.png');
-        }
-
-        .user-status.status-newbie {
-            background-image: url('profile/statuses/newbie.png');
-        }
-
-        /* Адаптивность для мобильных */
-        @media (max-width: 480px) {
-            .balance-window {
-                padding: 20px;
-            }
-
-            .balance-amount {
-                font-size: 32px;
-            }
-
-            .balance-icon {
-                width: 20px;
-                height: 20px;
-            }
-
-            .balance-label {
-                font-size: 15px;
-            }
-
-            .top-up-button {
-                padding: 14px 20px;
-                font-size: 16px;
-            }
-
-            .user-status {
-                width: 26px;
-                height: 26px;
-                margin-left: 5px;
-            }
-        }
-
-        /* Адаптивность для очень маленьких экранов */
-        @media (max-width: 360px) {
-            .balance-window {
-                padding: 18px;
-            }
-
-            .balance-amount {
-                font-size: 28px;
-            }
-
-            .balance-label {
-                font-size: 14px;
-            }
-
-            .balance-divider {
-                margin: 6px 0;
-            }
-        }
+        .spin-button:active { transform: scale(0.95); }
+        .spin-button:disabled { opacity: 0.6; }
     </style>
 </head>
 <body>
-    <!-- Контейнер для информации пользователя -->
-    <div class="user-info-container">
-        <!-- Кружок с аватаром -->
-        <div class="avatar-circle" id="avatarCircle"></div>
 
-        <!-- Имя пользователя -->
-        <div class="user-name-container">
-            <div class="user-name" id="userName">Гость</div>
+    <div class="top-section">
+        <div class="wheel-cut-area">
+            <div class="wheel" id="fortuneWheel"></div>
         </div>
-
-        <!-- Статус пользователя -->
-        <div class="user-status status-premium" title="Премиум пользователь"></div>
+        <div class="wheel-pointer" id="pointer"></div>
     </div>
 
-    <!-- Стеклянное окошко с балансом -->
-    <div class="balance-window">
-        <div class="balance-content">
-            <div class="balance-label">
-                <span class="balance-icon"></span>Ваш баланс
-            </div>
-
-            <div class="balance-amount">
-                1 500
-            </div>
-
-            <div class="balance-divider"></div>
-
-            <button class="top-up-button" id="topUpButton">
-                <span class="button-icon">💳</span>
-                Пополнить баланс
-            </button>
-        </div>
+    <div class="bottom-section">
+        <button class="spin-button" id="spinButton">КРУТИТЬ</button>
     </div>
 
     <script>
         // Инициализация Telegram WebApp
         document.addEventListener('DOMContentLoaded', () => {
             if (window.Telegram && window.Telegram.WebApp) {
-                Telegram.WebApp.expand();
                 Telegram.WebApp.ready();
-                loadUserData();
+                Telegram.WebApp.expand(); // Разворачиваем на весь экран
             }
         });
 
-        // Функция для загрузки данных пользователя
-        function loadUserData() {
-            const avatarCircle = document.getElementById('avatarCircle');
-            const userNameElement = document.getElementById('userName');
+        const CONFIG = {
+            numSectors: 6,
+            duration: 4000,
+            minSpins: 8,
+            hitZone: 10,
+            deflection: 5
+        };
 
-            if (window.Telegram && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
-                const user = Telegram.WebApp.initDataUnsafe.user;
+        let currentRotation = 180;
+        let isSpinning = false;
 
-                // Устанавливаем имя пользователя
-                if (user.first_name) {
-                    let fullName = user.first_name;
-                    if (user.last_name) {
-                        fullName += ' ' + user.last_name;
-                    }
-                    userNameElement.textContent = fullName;
-                }
+        const el = {
+            wheel: document.getElementById('fortuneWheel'),
+            pointer: document.getElementById('pointer'),
+            btn: document.getElementById('spinButton')
+        };
 
-                // Если есть фото профиля
-                if (user.photo_url) {
-                    const img = document.createElement('img');
-                    img.src = user.photo_url;
-                    img.alt = 'Аватар пользователя';
-                    img.className = 'avatar-img';
+        function spin() {
+            if (isSpinning) return;
+            isSpinning = true;
+            el.btn.disabled = true;
 
-                    img.onload = () => avatarCircle.appendChild(img);
-                    img.onerror = () => showAvatarPlaceholder(user.first_name);
+            const sectorAngle = 360 / CONFIG.numSectors;
+            const extraDegrees = Math.floor(Math.random() * 360);
+            const totalRotation = (CONFIG.minSpins * 360) + extraDegrees;
+            const startRotation = currentRotation;
+            const startTime = performance.now();
+
+            const easeOut = t => 1 - Math.pow(1 - t, 4);
+
+            function update(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / CONFIG.duration, 1);
+                const rotation = startRotation + (totalRotation * easeOut(progress));
+
+                el.wheel.style.transform = `rotate(${rotation}deg)`;
+
+                // Анимация удара курсора
+                const angleInSector = rotation % sectorAngle;
+                if (angleInSector < CONFIG.hitZone) {
+                    const power = (CONFIG.hitZone - angleInSector) * CONFIG.deflection;
+                    el.pointer.style.transform = `translate(-50%, -85%) rotate(${power}deg)`;
+
+                    // Легкая вибрация при прохождении сектора
+                    if (navigator.vibrate) navigator.vibrate(10);
                 } else {
-                    showAvatarPlaceholder(user.first_name);
+                    el.pointer.style.transform = `translate(-50%, -85%) rotate(0deg)`;
                 }
-            } else {
-                avatarCircle.innerHTML = '<div class="avatar-placeholder">👤</div>';
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    isSpinning = false;
+                    el.btn.disabled = false;
+                    currentRotation = rotation;
+
+                    // Финальная вибрация
+                    if (navigator.vibrate) navigator.vibrate(100);
+                }
             }
+            requestAnimationFrame(update);
         }
 
-        // Функция для отображения заглушки с инициалами
-        function showAvatarPlaceholder(firstName) {
-            const avatarCircle = document.getElementById('avatarCircle');
-            const placeholder = document.createElement('div');
-            placeholder.className = 'avatar-placeholder';
-            placeholder.textContent = firstName ? firstName.charAt(0).toUpperCase() : '👤';
-            avatarCircle.appendChild(placeholder);
-        }
-
-        // Настройка кнопки пополнения
-        document.getElementById('topUpButton').addEventListener('click', () => {
-            const paymentUrl = 'https://t.me/aiprorok_bot?start=payment';
-
-            if (window.Telegram && Telegram.WebApp) {
-                Telegram.WebApp.openLink(paymentUrl);
-            } else {
-                window.open(paymentUrl, '_blank');
-            }
-        });
+        el.btn.addEventListener('click', spin);
     </script>
 </body>
 </html>
