@@ -4,44 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Колесо Фортуны</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            font-family: Arial, sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            background: #1a1a1a url('profile/img.png') no-repeat center/cover;
-            display: flex;
-            flex-direction: column;
+            font-family: Arial, sans-serif; height: 100vh;
+            overflow: hidden; background: #1a1a1a;
+            display: flex; flex-direction: column;
         }
-
-        /* Общий контейнер для верхней части */
-        .top-section {
-            height: 50vh;
-            width: 100%;
-            position: relative; /* База для позиционирования курсора */
-        }
-
-        /* Контейнер ТОЛЬКО для колеса — он режит всё, что выше и ниже 50vh */
+        .top-section { height: 50vh; width: 100%; position: relative; }
         .wheel-container {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
+            width: 100%; height: 100%; position: relative;
+            overflow: hidden; display: flex; justify-content: center;
         }
-
         .wheel {
-            width: 100vh;
-            height: 100vh;
-            min-width: 100vh;
-            border-radius: 50%;
-            position: absolute;
-            top: -50vh; /* Центр круга на верхней кромке */
+            width: 100vh; height: 100vh; min-width: 100vh;
+            border-radius: 50%; position: absolute; top: -50vh;
             background: conic-gradient(
                 #ff4444 0deg 60deg, #44ff44 60deg 120deg,
                 #4444ff 120deg 180deg, #ffff44 180deg 240deg,
@@ -49,86 +26,65 @@
             );
             box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3), inset 0 0 50px rgba(0, 0, 0, 0.5);
             will-change: transform;
-            transform: rotate(180deg);
         }
 
-        /* КУРСОР "КУКУРУЗНАЯ ДОЛЬКА" — ВЫНЕСЕН ИЗ WHEEL-CONTAINER */
         .wheel-pointer {
-            position: absolute;
-            /* Ставим ровно на линию 50vh (центр экрана) */
-            top: 50vh;
-            left: 50%;
-            width: 45px;
-            height: 55px;
-            /* Сдвигаем вверх, чтобы он перекрывал край рулетки и не обрезался */
-            transform: translate(-50%, -85%);
-
+            position: absolute; top: 50vh; left: 50%;
+            width: 45px; height: 55px;
+            transform: translate(-50%, -85%) rotate(0deg);
             background: linear-gradient(135deg, #ffeb3b, #fbc02d);
             border-radius: 50% 50% 35% 35% / 70% 70% 30% 30%;
-
             border: 3px solid #ffffff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 -3px 5px rgba(0,0,0,0.2);
-
-            z-index: 100; /* Гарантированно поверх всего */
-            transform-origin: 50% 100%;
-            transition: transform 0.05s ease-out;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            z-index: 100; transform-origin: 50% 100%;
+            /* Плавный возврат из JS-отклонения */
+            transition: transform 0.15s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            will-change: transform;
         }
 
-        .button-container {
-            height: 50vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        /* Анимация жесткого дребезжания для быстрого вращения */
+        @keyframes rattle {
+            0% { transform: translate(-50%, -85%) rotate(0deg); }
+            50% { transform: translate(-50%, -85%) rotate(15deg); }
+            100% { transform: translate(-50%, -85%) rotate(0deg); }
+        }
+        .rattling {
+            animation: rattle 0.1s infinite linear;
+            transition: none !important;
         }
 
+        .button-container { height: 50vh; display: flex; justify-content: center; align-items: center; }
         .spin-button {
-            padding: 20px 70px;
-            font-size: 26px;
+            padding: 20px 70px; font-size: 26px; font-weight: bold;
             background: linear-gradient(135deg, #ff3366, #ff0066);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(255, 51, 102, 0.4);
+            color: white; border: none; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(255, 51, 102, 0.4);
+            -webkit-tap-highlight-color: transparent;
         }
         .spin-button:disabled { opacity: 0.5; }
     </style>
 </head>
 <body>
-
     <div class="top-section">
-        <div class="wheel-container">
-            <div class="wheel" id="fortuneWheel"></div>
-        </div>
-
+        <div class="wheel-container"><div class="wheel" id="fortuneWheel"></div></div>
         <div class="wheel-pointer" id="pointer"></div>
     </div>
-
-    <div class="button-container">
-        <button class="spin-button" id="spinButton">КРУТИТЬ</button>
-    </div>
+    <div class="button-container"><button class="spin-button" id="spinButton">КРУТИТЬ</button></div>
 
     <script>
         const CONFIG = {
             numSectors: 6,
-            duration: 4000,
+            spinDuration: 8000,
             minSpins: 7,
-            hitZone: 10,
+            idleSpeed: -0.015,
+            hitZone: 12,
             deflection: 4
         };
 
-                // Инициализация Telegram WebApp
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.Telegram && window.Telegram.WebApp) {
-                Telegram.WebApp.expand();
-                Telegram.WebApp.ready();
-                loadUserData();
-            }
-        });
-
-        let currentRotation = 180;
+        let currentRotation = 0;
         let isSpinning = false;
+        let lastFrameTime = performance.now();
+        let idleMode = true;
 
         const el = {
             wheel: document.getElementById('fortuneWheel'),
@@ -136,47 +92,73 @@
             btn: document.getElementById('spinButton')
         };
 
+        function updatePointer(rotation, speed = 0) {
+            el.wheel.style.transform = `rotate(${rotation}deg)`;
+
+            // Если скорость высокая (спин), включаем CSS-анимацию дребезжания
+            if (speed > 0.5) {
+                el.pointer.classList.add('rattling');
+                return;
+            }
+
+            el.pointer.classList.remove('rattling');
+
+            // Логика для медленного вращения (idle или конец спина)
+            const sectorAngle = 360 / CONFIG.numSectors;
+            const normalized = ((rotation % sectorAngle) + sectorAngle) % sectorAngle;
+
+            if (normalized > (sectorAngle - CONFIG.hitZone)) {
+                const p = (normalized - (sectorAngle - CONFIG.hitZone)) / CONFIG.hitZone;
+                el.pointer.style.transform = `translate(-50%, -85%) rotate(${p * 15}deg)`;
+            } else {
+                el.pointer.style.transform = `translate(-50%, -85%) rotate(0deg)`;
+            }
+        }
+
+        function animate(now) {
+            const dt = now - lastFrameTime;
+            lastFrameTime = now;
+            if (idleMode && !isSpinning) {
+                currentRotation += CONFIG.idleSpeed * dt;
+                updatePointer(currentRotation, 0);
+            }
+            requestAnimationFrame(animate);
+        }
+
         function spin() {
             if (isSpinning) return;
-            isSpinning = true;
+            isSpinning = true; idleMode = false;
             el.btn.disabled = true;
 
-            const sectorAngle = 360 / CONFIG.numSectors;
-            const extraDegrees = Math.floor(Math.random() * 360);
-            const totalRotation = (CONFIG.minSpins * 360) + extraDegrees;
-            const startRotation = currentRotation;
+            const startRot = currentRotation;
+            const targetRot = (CONFIG.minSpins * 360) + Math.random() * 360;
             const startTime = performance.now();
-
             const easeOut = t => 1 - Math.pow(1 - t, 4);
 
-            function update(now) {
+            function step(now) {
                 const elapsed = now - startTime;
-                const progress = Math.min(elapsed / CONFIG.duration, 1);
-                const rotation = startRotation + (totalRotation * easeOut(progress));
+                const progress = Math.min(elapsed / CONFIG.spinDuration, 1);
 
-                el.wheel.style.transform = `rotate(${rotation}deg)`;
+                // Текущая скорость для определения "дребезжания"
+                const speed = (1 - progress);
 
-                // Логика отклонения курсора (теперь учитываем translateX)
-                const angleInSector = rotation % sectorAngle;
-                if (angleInSector < CONFIG.hitZone) {
-                    const power = (CONFIG.hitZone - angleInSector) * CONFIG.deflection;
-                    el.pointer.style.transform = `translate(-50%, -85%) rotate(${power}deg)`;
-                } else {
-                    el.pointer.style.transform = `translate(-50%, -85%) rotate(0deg)`;
-                }
+                currentRotation = startRot + (targetRot * easeOut(progress));
+                updatePointer(currentRotation, speed);
 
                 if (progress < 1) {
-                    requestAnimationFrame(update);
+                    requestAnimationFrame(step);
                 } else {
                     isSpinning = false;
                     el.btn.disabled = false;
-                    currentRotation = rotation;
+                    el.pointer.classList.remove('rattling');
+                    setTimeout(() => { if(!isSpinning) idleMode = true; }, 2000);
                 }
             }
-            requestAnimationFrame(update);
+            requestAnimationFrame(step);
         }
 
         el.btn.addEventListener('click', spin);
+        requestAnimationFrame(animate);
     </script>
 </body>
 </html>
