@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Пополнение баланса</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #1c1c1e;
+            --card-bg: rgba(28, 28, 30, 0.85);
+            --accent-color: #007aff;
+            --text-color: #ffffff;
+            --secondary-text: #8e8e93;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background-image: url('profile/back.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            color: var(--text-color);
+        }
+
+        .payment-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            width: 100%;
+            max-width: 380px;
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--secondary-text);
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .method {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 14px;
+            border-radius: 14px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .method.active {
+            border-color: var(--accent-color);
+            background: rgba(0, 122, 255, 0.15);
+        }
+
+        .input-wrapper { margin-bottom: 12px; }
+
+        input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 18px;
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { border-color: var(--accent-color); }
+
+        .presets {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .preset-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 0;
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn.active {
+            background: var(--text-color);
+            color: #000;
+        }
+
+        .pay-button {
+            width: 100%;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="payment-container">
+    <div class="label">Выберите способ оплаты</div>
+    <div class="methods">
+        <div class="method active" id="method-card" onclick="setMethod('card')">Карта / СБП</div>
+        <div class="method" id="method-stars" onclick="setMethod('stars')">Telegram Stars</div>
+    </div>
+
+    <div class="label">Сумма пополнения</div>
+    <div class="input-wrapper">
+        <input type="number" id="amountInput" value="300" placeholder="0" inputmode="numeric">
+    </div>
+
+    <div class="presets">
+        <button class="preset-btn" onclick="setAmount(150, this)">150</button>
+        <button class="preset-btn active" id="preset-300" onclick="setAmount(300, this)">300</button>
+        <button class="preset-btn" onclick="setAmount(500, this)">500</button>
+        <button class="preset-btn" onclick="setAmount(1500, this)">1500</button>
+    </div>
+
+    <button class="pay-button" onclick="sendPayment()">Пополнить</button>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+
+    let currentMethod = 'card';
+
+    function setMethod(method) {
+        currentMethod = method;
+        document.getElementById('method-card').classList.toggle('active', method === 'card');
+        document.getElementById('method-stars').classList.toggle('active', method === 'stars');
+        if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+    }
+
+    function setAmount(val, el) {
+        const input = document.getElementById('amountInput');
+        input.value = val;
+
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    }
+
+    document.getElementById('amountInput').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+
+        // Если введенная вручную сумма совпадает с одной из кнопок — подсвечиваем её
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            if (parseInt(btn.innerText) === val) {
+                btn.classList.add('active');
+            }
+        });
+    });
+
+    function sendPayment() {
+        const amount = document.getElementById('amountInput').value;
+        if (!amount || amount <= 0) {
+            tg.showAlert("Введите сумму");
+            return;
+        }
+        tg.sendData(JSON.stringify({
+            method: currentMethod,
+            amount: parseInt(amount)
+        }));
+    }
+</script>
+</body>
+</html>
