@@ -450,7 +450,8 @@
                 const allWrappers = document.querySelectorAll('.card-wrapper');
                 allWrappers.forEach(wrapper => {
                     if (!this.selectedCardsList.some(c => c.wrapper === wrapper)) {
-                        wrapper.style.opacity = '0';
+                        wrapper.style.opacity = '0',
+                        wrapper.style.pointerEvents = 'none';
                     }
                 });
             }
