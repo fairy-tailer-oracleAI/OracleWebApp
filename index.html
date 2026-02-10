@@ -172,35 +172,47 @@
             display: inline-block;
             font-size: 1.2em;
             padding: 10px 20px;
-            margin-top: 30px;
+            
+            /* ИЗМЕНЕНИЯ ТУТ: Фиксируем кнопку внизу */
+            position: fixed;
+            bottom: 8%; /* Расстояние от нижнего края экрана */
+            left: 50%;
+            transform: translateX(-50%) translateY(20px); /* Центрируем и готовим к анимации появления */
+            
             background-color: #555;
             color: #fff;
             border-radius: 15px;
             border: none;
             cursor: pointer;
-            position: relative;
             transition: all 0.5s ease;
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
             opacity: 0;
-            transform: translateY(20px);
             z-index: 20;
+            white-space: nowrap; /* Чтобы текст не переносился */
         }
         .bubbly-button.visible {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(-50%) translateY(0);
         }
         .bubbly-button:active {
-            transform: scale(0.95);
+            transform: translateX(-50%) scale(0.95);
             background-color: #444;
         }
-        .bubbly-button.animate {
-            animation: pulse 1.5s infinite;
-        }
-
+        
         /* Анимация пульсации кнопки */
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); }
-            50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); }
+            0%, 100% { 
+                box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); 
+                transform: translateX(-50%) scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); 
+                transform: translateX(-50%) scale(1.03);
+            }
+        }
+        
+        .bubbly-button.animate {
+            animation: pulse 1.5s infinite;
         }
     </style>
 </head>
