@@ -13,6 +13,7 @@
             --accent-color: #007aff;
             --text-color: #ffffff;
             --secondary-text: #8e8e93;
+            --star-gold: #FFD700;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,7 +38,7 @@
             -webkit-backdrop-filter: blur(20px);
             width: 100%;
             max-width: 380px;
-            border-radius: 24px;
+            border-radius: 28px;
             padding: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -52,11 +53,28 @@
             letter-spacing: 0.5px;
         }
 
+        .price-list {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+
+        .service-cost { color: var(--star-gold); font-weight: bold; }
+
         .methods {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .method {
@@ -65,10 +83,9 @@
             border-radius: 14px;
             text-align: center;
             font-size: 13px;
-            font-weight: 500;
             border: 2px solid transparent;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: 0.2s;
         }
 
         .method.active {
@@ -76,22 +93,29 @@
             background: rgba(0, 122, 255, 0.15);
         }
 
-        .input-wrapper { margin-bottom: 12px; }
+        .input-section { margin-bottom: 20px; }
 
         input {
             width: 100%;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
-            padding: 18px;
+            padding: 16px;
             color: white;
             font-size: 24px;
             text-align: center;
             outline: none;
-            transition: border-color 0.2s;
         }
 
-        input:focus { border-color: var(--accent-color); }
+        .converter-hint {
+            text-align: center;
+            font-size: 13px;
+            color: var(--secondary-text);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .converter-hint span { color: var(--star-gold); font-weight: bold; }
 
         .presets {
             display: flex;
@@ -104,13 +128,12 @@
             flex: 1;
             background: rgba(255, 255, 255, 0.08);
             border: none;
-            border-radius: 25px;
+            border-radius: 20px;
             padding: 10px 0;
             color: var(--text-color);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
         }
 
         .preset-btn.active {
@@ -128,81 +151,135 @@
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+            transition: 0.3s;
         }
     </style>
 </head>
 <body>
 
 <div class="payment-container">
-    <div class="label">Выберите способ оплаты</div>
+    <div class="label">Услуги и цены</div>
+    <div class="price-list" id="priceListContainer"></div>
+
+    <div class="label">Способ оплаты</div>
     <div class="methods">
         <div class="method active" id="method-card" onclick="setMethod('card')">Карта / СБП</div>
-        <div class="method" id="method-stars" onclick="setMethod('stars')">Telegram Stars</div>
+        <div class="method" id="method-stars" onclick="setMethod('stars')">Stars</div>
     </div>
 
-    <div class="label">Сумма пополнения</div>
-    <div class="input-wrapper">
-        <input type="number" id="amountInput" value="300" placeholder="0" inputmode="numeric">
+    <div class="input-section">
+        <div class="label" id="inputLabel">Сумма</div>
+        <input type="number" id="amountInput" value="300" inputmode="numeric">
+        <div class="converter-hint" id="converterHint">Итого на баланс: <span id="starCount">0</span> ★</div>
     </div>
 
-    <div class="presets">
-        <button class="preset-btn" onclick="setAmount(150, this)">150</button>
-        <button class="preset-btn active" id="preset-300" onclick="setAmount(300, this)">300</button>
-        <button class="preset-btn" onclick="setAmount(500, this)">500</button>
-        <button class="preset-btn" onclick="setAmount(1500, this)">1500</button>
-    </div>
+    <div class="presets" id="presetsContainer">
+        </div>
 
-    <button class="pay-button" onclick="sendPayment()">Пополнить</button>
+    <button class="pay-button" onclick="handlePayment()">Пополнить</button>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
-    tg.ready();
+
+    // --- КОНФИГУРАЦИЯ (Меняй данные здесь) ---
+
+    const SERVICES = [
+        { name: "🔮 Расклад", cost: 50 },
+        { name: "❤️ Общение", cost: 120 },
+        { name: "🃏 Доп карта", cost: 350 },
+    ];
+
+    const CONFIG = {
+        rates: {
+            card: 0.5,  // 1 рубль = 0.5 звезды
+            stars: 1.0  // 1 звезда ввода = 1 звезда на баланс
+        },
+        presets: [150, 300, 500, 1500],
+        defaultAmount: 300
+    };
 
     let currentMethod = 'card';
+
+    // --- ЛОГИКА ---
+
+    // 1. Рендеринг прайс-листа
+    function renderPrices() {
+        const container = document.getElementById('priceListContainer');
+        container.innerHTML = SERVICES.map(s => `
+            <div class="price-item">
+                <span>${s.name}</span>
+                <span class="service-cost">${s.cost} ★</span>
+            </div>
+        `).join('');
+    }
+
+    // 2. Рендеринг пресетов
+    function renderPresets() {
+        const container = document.getElementById('presetsContainer');
+        container.innerHTML = CONFIG.presets.map(amount => `
+            <button class="preset-btn ${amount === CONFIG.defaultAmount ? 'active' : ''}"
+                    onclick="updateAmount(${amount}, this)">
+                ${amount}
+            </button>
+        `).join('');
+    }
+
+    // 3. Конвертация
+    function updateConversion() {
+        const val = parseFloat(document.getElementById('amountInput').value) || 0;
+        const result = Math.floor(val * CONFIG.rates[currentMethod]);
+        document.getElementById('starCount').textContent = result.toLocaleString();
+    }
+
+    function updateAmount(val, el) {
+        document.getElementById('amountInput').value = val;
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        updateConversion();
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    }
 
     function setMethod(method) {
         currentMethod = method;
         document.getElementById('method-card').classList.toggle('active', method === 'card');
         document.getElementById('method-stars').classList.toggle('active', method === 'stars');
+
+        const label = document.getElementById('inputLabel');
+        const btn = document.querySelector('.pay-button');
+
+        if (method === 'stars') {
+            label.textContent = "Количество звёзд";
+            btn.style.background = 'linear-gradient(135deg, #FFD700, #FFA500)';
+            btn.style.color = '#000';
+        } else {
+            label.textContent = "Сумма в рублях";
+            btn.style.background = 'var(--accent-color)';
+            btn.style.color = '#fff';
+        }
+
+        updateConversion();
         if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
     }
 
-    function setAmount(val, el) {
-        const input = document.getElementById('amountInput');
-        input.value = val;
-
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-    }
-
-    document.getElementById('amountInput').addEventListener('input', (e) => {
-        const val = parseInt(e.target.value);
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-
-        // Если введенная вручную сумма совпадает с одной из кнопок — подсвечиваем её
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            if (parseInt(btn.innerText) === val) {
-                btn.classList.add('active');
-            }
-        });
-    });
-
-    function sendPayment() {
+    function handlePayment() {
         const amount = document.getElementById('amountInput').value;
-        if (!amount || amount <= 0) {
-            tg.showAlert("Введите сумму");
-            return;
-        }
+        const stars = document.getElementById('starCount').textContent;
+
         tg.sendData(JSON.stringify({
             method: currentMethod,
-            amount: parseInt(amount)
+            input_amount: parseInt(amount),
+            final_stars: stars
         }));
     }
+
+    // Инициализация
+    document.getElementById('amountInput').addEventListener('input', updateConversion);
+    renderPrices();
+    renderPresets();
+    updateConversion();
+
 </script>
 </body>
 </html>
