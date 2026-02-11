@@ -290,6 +290,22 @@
             fetch('card/cards_path.json')
                 .then(response => response.json())
                 .then(data => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const excludeParam = urlParams.get('exclude');
+                    
+                    let filteredData = data;
+        
+                    if (excludeParam) {
+                        const excludeList = decodeURIComponent(excludeParam).split(',');
+                        console.log("Исключаем карты из колоды:", excludeList);
+        
+                        filteredData = Object.fromEntries(
+                            Object.entries(data).filter(([path, cardInfo]) => {
+                                return !excludeList.includes(cardInfo.title);
+                            })
+                        );
+                    }
+                    
                     const app = new TarotApp(data);
                     app.init();
                     if (window.Telegram && Telegram.WebApp) {
