@@ -8,7 +8,7 @@
 
     <style>
         :root {
-            --bg-color: #1c1c1e;
+            --bg-color: #0a0a0b; /* Сделал темнее, чтобы звезды "горели" */
             --card-bg: rgba(28, 28, 30, 0.85);
             --accent-color: #007aff;
             --text-color: #ffffff;
@@ -20,16 +20,24 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background-image: url('profile/back.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background: var(--bg-color);
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 16px;
             color: var(--text-color);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- КАНВАС ДЛЯ ЗВЕЗД --- */
+        #starCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0; /* Под карточкой */
+            pointer-events: none;
         }
 
         .payment-container {
@@ -42,133 +50,33 @@
             padding: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10; /* Поверх звезд */
         }
 
-        .label {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--secondary-text);
-            margin-bottom: 10px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        /* Обвертка для текста и иконки */
-        .label-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .label-icon {
-            width: 16px;
-            height: 16px;
-            object-fit: contain;
-        }
-
-        .price-list {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .price-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            font-size: 13px;
-        }
-
+        /* Остальной твой CSS без изменений */
+        .label { font-size: 11px; text-transform: uppercase; color: var(--secondary-text); margin-bottom: 10px; font-weight: 700; letter-spacing: 0.5px; }
+        .label-wrapper { display: flex; align-items: center; gap: 6px; }
+        .label-icon { width: 16px; height: 16px; object-fit: contain; }
+        .price-list { background: rgba(0, 0, 0, 0.2); border-radius: 16px; padding: 12px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .price-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
         .service-cost { color: var(--star-gold); font-weight: bold; }
-
-        .methods {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .method {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 14px;
-            border-radius: 14px;
-            text-align: center;
-            font-size: 13px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .method.active {
-            border-color: var(--accent-color);
-            background: rgba(0, 122, 255, 0.15);
-        }
-
+        .methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .method { background: rgba(255, 255, 255, 0.05); padding: 14px; border-radius: 14px; text-align: center; font-size: 13px; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
+        .method.active { border-color: var(--accent-color); background: rgba(0, 122, 255, 0.15); }
         .input-section { margin-bottom: 20px; }
-
-        input {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 16px;
-            color: white;
-            font-size: 24px;
-            text-align: center;
-            outline: none;
-        }
-
-        .converter-hint {
-            text-align: center;
-            font-size: 13px;
-            color: var(--secondary-text);
-            margin-top: 8px;
-            font-weight: 500;
-        }
-
+        input { width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 16px; color: white; font-size: 24px; text-align: center; outline: none; }
+        .converter-hint { text-align: center; font-size: 13px; color: var(--secondary-text); margin-top: 8px; font-weight: 500; }
         .converter-hint span { color: var(--star-gold); font-weight: bold; }
-
-        .presets {
-            display: flex;
-            justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 24px;
-        }
-
-        .preset-btn {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.08);
-            border: none;
-            border-radius: 20px;
-            padding: 10px 0;
-            color: var(--text-color);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .preset-btn.active {
-            background: var(--text-color);
-            color: #000;
-        }
-
-        .pay-button {
-            width: 100%;
-            background: var(--accent-color);
-            border: none;
-            border-radius: 16px;
-            padding: 18px;
-            color: white;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.3s;
-        }
+        .presets { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 24px; }
+        .preset-btn { flex: 1; background: rgba(255, 255, 255, 0.08); border: none; border-radius: 20px; padding: 10px 0; color: var(--text-color); font-size: 13px; font-weight: 600; cursor: pointer; }
+        .preset-btn.active { background: var(--text-color); color: #000; }
+        .pay-button { width: 100%; background: var(--accent-color); border: none; border-radius: 16px; padding: 18px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; }
     </style>
 </head>
 <body>
+
+<canvas id="starCanvas"></canvas>
 
 <div class="payment-container">
     <div class="label">Услуги и цены</div>
@@ -196,6 +104,62 @@
 </div>
 
 <script>
+    // --- ЛОГИКА ЗВЕЗД (ОПТИМИЗИРОВАНА ПОД ШИРОКУЮ КАРТОЧКУ) ---
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height, stars = [];
+    const STAR_COUNT = 800;
+    const SPEED = 0.5;
+
+    function initStars() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        stars = [];
+        for (let i = 0; i < STAR_COUNT; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                z: Math.random() * width,
+                // Рандомный центр вылета: либо слева, либо справа от центра экрана
+                ox: Math.random() > 0.5 ? width * 0.2 : width * 0.8
+            });
+        }
+    }
+
+    function drawStars() {
+        ctx.fillStyle = "#0a0a0b";
+        ctx.fillRect(0, 0, width, height);
+
+        for (let i = 0; i < STAR_COUNT; i++) {
+            let s = stars[i];
+            s.z -= SPEED;
+
+            if (s.z <= 0) {
+                s.z = width;
+                s.x = Math.random() * width;
+                s.y = Math.random() * height;
+            }
+
+            // Проекция из боковых центров, чтобы звезды вылетали по бокам от карты
+            const k = 128 / s.z;
+            const px = (s.x - s.ox) * k + s.ox;
+            const py = (s.y - height/2) * k + height/2;
+
+            if (px >= 0 && px <= width && py >= 0 && py <= height) {
+                const size = (1 - s.z / width) * 2.5;
+                const shade = Math.min(255, Math.floor((1 - s.z / width) * 255));
+                ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade})`;
+                ctx.beginPath();
+                ctx.arc(px, py, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        requestAnimationFrame(drawStars);
+    }
+
+    // --- ТВОЯ ЛОГИКА БЕЗ ИЗМЕНЕНИЙ ---
     const tg = window.Telegram.WebApp;
     tg.expand();
 
@@ -205,34 +169,18 @@
         { name: "🃏 Доп карта", cost: 350 },
     ];
 
-    const CONFIG = {
-        rates: {
-            card: 0.5,
-            stars: 1.0
-        },
-        presets: [150, 300, 500, 1500],
-        defaultAmount: 300
-    };
-
+    const CONFIG = { rates: { card: 0.5, stars: 1.0 }, presets: [150, 300, 500, 1500], defaultAmount: 300 };
     let currentMethod = 'card';
 
     function renderPrices() {
-        const container = document.getElementById('priceListContainer');
-        container.innerHTML = SERVICES.map(s => `
-            <div class="price-item">
-                <span>${s.name}</span>
-                <span class="service-cost">${s.cost} ★</span>
-            </div>
+        document.getElementById('priceListContainer').innerHTML = SERVICES.map(s => `
+            <div class="price-item"><span>${s.name}</span><span class="service-cost">${s.cost} ★</span></div>
         `).join('');
     }
 
     function renderPresets() {
-        const container = document.getElementById('presetsContainer');
-        container.innerHTML = CONFIG.presets.map(amount => `
-            <button class="preset-btn ${amount === CONFIG.defaultAmount ? 'active' : ''}"
-                    onclick="updateAmount(${amount}, this)">
-                ${amount}
-            </button>
+        document.getElementById('presetsContainer').innerHTML = CONFIG.presets.map(amount => `
+            <button class="preset-btn ${amount === CONFIG.defaultAmount ? 'active' : ''}" onclick="updateAmount(${amount}, this)">${amount}</button>
         `).join('');
     }
 
@@ -254,23 +202,14 @@
         currentMethod = method;
         document.getElementById('method-card').classList.toggle('active', method === 'card');
         document.getElementById('method-stars').classList.toggle('active', method === 'stars');
-
-        const labelText = document.getElementById('labelText');
-        const labelIcon = document.getElementById('labelIcon');
-        const btn = document.querySelector('.pay-button');
-
+        const labelText = document.getElementById('labelText'), labelIcon = document.getElementById('labelIcon'), btn = document.querySelector('.pay-button');
         if (method === 'stars') {
-            labelText.textContent = "Сумма в Telegram stars";
-            labelIcon.src = "star.png"; // Твоя картинка звезды
-            btn.style.background = 'linear-gradient(135deg, #FFD700, #FFA500)';
-            btn.style.color = '#000';
+            labelText.textContent = "Сумма в Telegram stars"; labelIcon.src = "star.png";
+            btn.style.background = 'linear-gradient(135deg, #FFD700, #FFA500)'; btn.style.color = '#000';
         } else {
-            labelText.textContent = "Сумма в рублях";
-            labelIcon.src = "card.png"; // Твоя картинка карты
-            btn.style.background = 'var(--accent-color)';
-            btn.style.color = '#fff';
+            labelText.textContent = "Сумма в рублях"; labelIcon.src = "card.png";
+            btn.style.background = 'var(--accent-color)'; btn.style.color = '#fff';
         }
-
         updateConversion();
         if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
     }
@@ -278,15 +217,13 @@
     function handlePayment() {
         const amount = document.getElementById('amountInput').value;
         const stars = document.getElementById('starCount').textContent;
-
-        tg.sendData(JSON.stringify({
-            method: currentMethod,
-            input_amount: parseInt(amount),
-            final_stars: stars
-        }));
+        tg.sendData(JSON.stringify({ method: currentMethod, input_amount: parseInt(amount), final_stars: stars }));
     }
 
+    window.addEventListener('resize', initStars);
     document.getElementById('amountInput').addEventListener('input', updateConversion);
+    initStars();
+    drawStars();
     renderPrices();
     renderPresets();
     updateConversion();
