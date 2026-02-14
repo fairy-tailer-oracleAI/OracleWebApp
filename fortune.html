@@ -13,9 +13,29 @@
             font-family: Arial, sans-serif;
             height: 100vh;
             overflow: hidden;
-            background: #1a1a1a;
+            background: #050507; /* Глубокий черный для контраста звезд */
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+
+        /* Фоновый слой со звездами */
+        #starCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* Виньетка для мягкости */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, #050507 90%);
+            z-index: -1;
+            pointer-events: none;
         }
 
         .top-section {
@@ -33,6 +53,7 @@
             justify-content: center;
         }
 
+        /* Твой оригинальный стиль колеса */
         .wheel {
             width: 100vh;
             height: 100vh;
@@ -49,6 +70,7 @@
             will-change: transform;
         }
 
+        /* Твой оригинальный стиль курсора */
         .wheel-pointer {
             position: absolute;
             top: 50vh;
@@ -62,7 +84,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 -3px 5px rgba(0,0,0,0.2);
             z-index: 100;
             transform-origin: 50% 100%;
-            /* Переход применяется только когда мы явно добавим класс или через JS */
             transition: transform 0s ease-out;
         }
 
@@ -71,8 +92,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            z-index: 10;
         }
 
+        /* Твой оригинальный стиль кнопки */
         .spin-button {
             padding: 20px 70px;
             font-size: 26px;
@@ -89,6 +112,9 @@
 </head>
 <body>
 
+    <canvas id="starCanvas"></canvas>
+    <div class="overlay"></div>
+
     <div class="top-section">
         <div class="wheel-container">
             <div class="wheel" id="fortuneWheel"></div>
@@ -101,6 +127,54 @@
     </div>
 
     <script>
+        // --- ЗВЕЗДНЫЙ ФОН ---
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, centerX, centerY;
+        let stars = [];
+        const STAR_COUNT = 800;
+        const SPEED = 0.35;
+
+        function initStars() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2;
+            canvas.width = width;
+            canvas.height = height;
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push({
+                    x: Math.random() * width - centerX,
+                    y: Math.random() * height - centerY,
+                    z: Math.random() * width
+                });
+            }
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = 0; i < STAR_COUNT; i++) {
+                let s = stars[i];
+                s.z -= SPEED;
+                if (s.z <= 0) {
+                    s.z = width;
+                    s.x = Math.random() * width - centerX;
+                    s.y = Math.random() * height - centerY;
+                }
+                const pX = (s.x / s.z) * (width * 0.5) + centerX;
+                const pY = (s.y / s.z) * (height * 0.5) + centerY;
+                const size = (1 - s.z / width) * 2;
+                const opacity = (1 - s.z / width) * 0.8;
+                ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.beginPath();
+                ctx.arc(pX, pY, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            requestAnimationFrame(drawStars);
+        }
+
+        // --- ТВОЯ ОРИГИНАЛЬНАЯ ЛОГИКА КОЛЕСА ---
         const CONFIG = {
             numSectors: 6,
             spinDuration: 9000,
@@ -109,8 +183,6 @@
             deflection: 4,
             idleSpeed: -0.01,
             returnDelay: 2000,
-            // НОВЫЙ ПАРАМЕТР: Скорость возврата ку рсора (в секундах)
-            // 0.1 - резко, 0.3 - мягко, 0.5 - "кисель"
             pointerReturnSpeed: 0.18
         };
 
@@ -129,29 +201,24 @@
         function animate(now) {
             const deltaTime = now - lastFrameTime;
             lastFrameTime = now;
-
             if (idleMode && !isSpinning) {
                 currentRotation += CONFIG.idleSpeed * deltaTime;
                 updateWheelVisuals(currentRotation);
             }
-
             requestAnimationFrame(animate);
         }
 
         function updateWheelVisuals(rotation) {
             el.wheel.style.transform = `rotate(${rotation}deg)`;
-
             const sectorAngle = 360 / CONFIG.numSectors;
             const normalizedRotation = ((rotation % 360) + 360) % 360;
             const angleInSector = normalizedRotation % sectorAngle;
 
             if (angleInSector < CONFIG.hitZone) {
-                // В момент удара отключаем анимацию CSS, чтобы курсор четко следовал за углом колеса
                 el.pointer.style.transition = "transform 0s";
                 const power = (CONFIG.hitZone - angleInSector) * CONFIG.deflection;
                 el.pointer.style.transform = `translate(-50%, -85%) rotate(${power}deg)`;
             } else {
-                // В момент выхода из зоны удара включаем плавный возврат
                 el.pointer.style.transition = `transform ${CONFIG.pointerReturnSpeed}s ease-out`;
                 el.pointer.style.transform = `translate(-50%, -85%) rotate(0deg)`;
             }
@@ -159,7 +226,6 @@
 
         function spin() {
             if (isSpinning) return;
-
             isSpinning = true;
             idleMode = false;
             el.btn.disabled = true;
@@ -169,7 +235,6 @@
             const extraDegrees = Math.floor(Math.random() * 360);
             const totalTargetRotation = (CONFIG.minSpins * 360) + extraDegrees;
             const startTime = performance.now();
-
             const easeOut = t => 1 - Math.pow(1 - t, 4);
 
             function spinUpdate(now) {
@@ -177,7 +242,6 @@
                 const progress = Math.min(elapsed / CONFIG.spinDuration, 1);
                 const step = totalTargetRotation * easeOut(progress);
                 currentRotation = startRotation + step;
-
                 updateWheelVisuals(currentRotation);
 
                 if (progress < 1) {
@@ -197,6 +261,9 @@
             }, CONFIG.returnDelay);
         }
 
+        window.addEventListener('resize', initStars);
+        initStars();
+        drawStars();
         el.btn.addEventListener('click', spin);
         requestAnimationFrame(animate);
     </script>

@@ -53,6 +53,19 @@
             letter-spacing: 0.5px;
         }
 
+        /* Обвертка для текста и иконки */
+        .label-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .label-icon {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+        }
+
         .price-list {
             background: rgba(0, 0, 0, 0.2);
             border-radius: 16px;
@@ -164,17 +177,20 @@
     <div class="label">Способ оплаты</div>
     <div class="methods">
         <div class="method active" id="method-card" onclick="setMethod('card')">Карта / СБП</div>
-        <div class="method" id="method-stars" onclick="setMethod('stars')">Stars</div>
+        <div class="method" id="method-stars" onclick="setMethod('stars')">Telegram Stars</div>
     </div>
 
     <div class="input-section">
-        <div class="label" id="inputLabel">Сумма</div>
+        <div class="label label-wrapper" id="inputLabelContainer">
+            <span id="labelText">Сумма в рублях</span>
+            <img src="card.png" id="labelIcon" class="label-icon">
+        </div>
+
         <input type="number" id="amountInput" value="300" inputmode="numeric">
         <div class="converter-hint" id="converterHint">Итого на баланс: <span id="starCount">0</span> ★</div>
     </div>
 
-    <div class="presets" id="presetsContainer">
-        </div>
+    <div class="presets" id="presetsContainer"></div>
 
     <button class="pay-button" onclick="handlePayment()">Пополнить</button>
 </div>
@@ -182,8 +198,6 @@
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
-
-    // --- КОНФИГУРАЦИЯ (Меняй данные здесь) ---
 
     const SERVICES = [
         { name: "🔮 Расклад", cost: 50 },
@@ -193,8 +207,8 @@
 
     const CONFIG = {
         rates: {
-            card: 0.5,  // 1 рубль = 0.5 звезды
-            stars: 1.0  // 1 звезда ввода = 1 звезда на баланс
+            card: 0.5,
+            stars: 1.0
         },
         presets: [150, 300, 500, 1500],
         defaultAmount: 300
@@ -202,9 +216,6 @@
 
     let currentMethod = 'card';
 
-    // --- ЛОГИКА ---
-
-    // 1. Рендеринг прайс-листа
     function renderPrices() {
         const container = document.getElementById('priceListContainer');
         container.innerHTML = SERVICES.map(s => `
@@ -215,7 +226,6 @@
         `).join('');
     }
 
-    // 2. Рендеринг пресетов
     function renderPresets() {
         const container = document.getElementById('presetsContainer');
         container.innerHTML = CONFIG.presets.map(amount => `
@@ -226,7 +236,6 @@
         `).join('');
     }
 
-    // 3. Конвертация
     function updateConversion() {
         const val = parseFloat(document.getElementById('amountInput').value) || 0;
         const result = Math.floor(val * CONFIG.rates[currentMethod]);
@@ -246,15 +255,18 @@
         document.getElementById('method-card').classList.toggle('active', method === 'card');
         document.getElementById('method-stars').classList.toggle('active', method === 'stars');
 
-        const label = document.getElementById('inputLabel');
+        const labelText = document.getElementById('labelText');
+        const labelIcon = document.getElementById('labelIcon');
         const btn = document.querySelector('.pay-button');
 
         if (method === 'stars') {
-            label.textContent = "Количество звёзд";
+            labelText.textContent = "Сумма в Telegram stars";
+            labelIcon.src = "star.png"; // Твоя картинка звезды
             btn.style.background = 'linear-gradient(135deg, #FFD700, #FFA500)';
             btn.style.color = '#000';
         } else {
-            label.textContent = "Сумма в рублях";
+            labelText.textContent = "Сумма в рублях";
+            labelIcon.src = "card.png"; // Твоя картинка карты
             btn.style.background = 'var(--accent-color)';
             btn.style.color = '#fff';
         }
@@ -274,7 +286,6 @@
         }));
     }
 
-    // Инициализация
     document.getElementById('amountInput').addEventListener('input', updateConversion);
     renderPrices();
     renderPresets();
