@@ -8,8 +8,8 @@
 
     <style>
         :root {
-            --bg-color: #050508; /* Еще глубже черный для контраста свечения */
-            --card-bg: rgba(28, 28, 30, 0.85);
+            --bg-color: #050507;
+            --card-bg: rgba(28, 28, 30, 0.95);
             --accent-color: #007aff;
             --text-color: #ffffff;
             --secondary-text: #8e8e93;
@@ -20,7 +20,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-color);
+            background-color: var(--bg-color);
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -31,16 +31,11 @@
             position: relative;
         }
 
-        #starCanvas {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 0;
-            pointer-events: none;
-        }
+        #starCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, transparent 0%, var(--bg-color) 90%); z-index: -1; pointer-events: none; }
 
         .payment-container {
-            background: var(--card-bg);
+            background: rgba(28, 28, 30, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             width: 100%;
@@ -48,177 +43,296 @@
             border-radius: 28px;
             padding: 24px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            position: relative;
-            z-index: 10;
+            z-index: 1;
         }
 
-        /* Весь твой остальной CSS без изменений */
+        /* Общие стили элементов */
         .label { font-size: 11px; text-transform: uppercase; color: var(--secondary-text); margin-bottom: 10px; font-weight: 700; letter-spacing: 0.5px; }
-        .label-wrapper { display: flex; align-items: center; gap: 6px; }
-        .label-icon { width: 16px; height: 16px; object-fit: contain; }
         .price-list { background: rgba(0, 0, 0, 0.2); border-radius: 16px; padding: 12px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.05); }
         .price-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
         .service-cost { color: var(--star-gold); font-weight: bold; }
         .methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .method { background: rgba(255, 255, 255, 0.05); padding: 14px; border-radius: 14px; text-align: center; font-size: 13px; border: 2px solid transparent; cursor: pointer; transition: 0.2s; }
         .method.active { border-color: var(--accent-color); background: rgba(0, 122, 255, 0.15); }
-        .input-section { margin-bottom: 20px; }
-        input { width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 16px; color: white; font-size: 24px; text-align: center; outline: none; }
-        .converter-hint { text-align: center; font-size: 13px; color: var(--secondary-text); margin-top: 8px; font-weight: 500; }
-        .converter-hint span { color: var(--star-gold); font-weight: bold; }
+
+        input { width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 16px; color: white; font-size: 24px; text-align: center; outline: none; margin-bottom: 10px; }
+        input::placeholder { color: rgba(255,255,255,0.2); font-size: 14px; }
+
+        /* Промо-блок */
+        .promo-wrapper { position: relative; margin-bottom: 24px; padding: 2px; transition: opacity 0.5s ease; }
+        .promo-banner { position: relative; background: rgba(255, 215, 0, 0.08); border: 1px solid rgba(255, 215, 0, 0.4); border-radius: 14px; padding: 12px; text-align: center; animation: borderPulse 2s infinite ease-in-out; }
+        .promo-text { font-size: 13px; color: var(--star-gold); font-weight: 700; display: block; margin-bottom: 4px; }
+        .promo-timer { font-family: monospace; font-size: 16px; color: var(--star-gold); font-weight: 800; text-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
+
+        /* Модальное окно подтверждения */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: none; /* Скрыто по умолчанию */
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .confirm-modal {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 340px;
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .confirm-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; text-align: center; color: var(--star-gold); }
+        .confirm-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+        .confirm-label { font-size: 10px; color: var(--secondary-text); text-transform: uppercase; font-weight: 700; }
+        .confirm-value { font-size: 15px; color: #fff; font-weight: 600; }
+
+        .email-input { font-size: 16px !important; padding: 12px !important; text-align: left !important; background: rgba(255,255,255,0.05) !important; margin-top: 8px; }
+
+        .modal-footer { font-size: 12px; color: var(--secondary-text); text-align: center; margin-top: 20px; line-height: 1.4; }
+
+        /* Кнопки */
+        .pay-button { width: 100%; background: var(--accent-color); border: none; border-radius: 16px; padding: 18px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .pay-button:active { transform: scale(0.98); opacity: 0.9; }
+        .cancel-btn { background: transparent; color: var(--secondary-text); border: none; margin-top: 12px; width: 100%; font-size: 14px; cursor: pointer; padding: 10px; }
+
+        /* Вспомогательные стили */
+        .converter-hint { text-align: center; font-size: 13px; color: var(--secondary-text); margin-top: 8px; margin-bottom: 20px; }
+        #oldStarCount { text-decoration: line-through; margin-right: 6px; opacity: 0.35; display: none; }
         .presets { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 24px; }
         .preset-btn { flex: 1; background: rgba(255, 255, 255, 0.08); border: none; border-radius: 20px; padding: 10px 0; color: var(--text-color); font-size: 13px; font-weight: 600; cursor: pointer; }
         .preset-btn.active { background: var(--text-color); color: #000; }
-        .pay-button { width: 100%; background: var(--accent-color); border: none; border-radius: 16px; padding: 18px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+
+        @keyframes borderPulse { 0%, 100% { border-color: rgba(255, 215, 0, 0.4); } 50% { border-color: rgba(255, 215, 0, 0.8); } }
+        .sparkle { position: absolute; background: var(--star-gold); width: 2px; height: 2px; border-radius: 50%; pointer-events: none; animation: flyAway 1.5s linear infinite; }
+        @keyframes flyAway { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; } }
     </style>
 </head>
 <body>
 
-<canvas id="starCanvas"></canvas>
+    <canvas id="starCanvas"></canvas>
+    <div class="overlay"></div>
 
-<div class="payment-container">
-    <div class="label">Услуги и цены</div>
-    <div class="price-list" id="priceListContainer"></div>
-    <div class="label">Способ оплаты</div>
-    <div class="methods">
-        <div class="method active" id="method-card" onclick="setMethod('card')">Карта / СБП</div>
-        <div class="method" id="method-stars" onclick="setMethod('stars')">Telegram Stars</div>
-    </div>
-    <div class="input-section">
-        <div class="label label-wrapper">
-            <span id="labelText">Сумма в рублях</span>
-            <img src="card.png" id="labelIcon" class="label-icon">
+    <div class="payment-container">
+        <div class="label">Услуги и цены</div>
+        <div id="priceListContainer" class="price-list"></div>
+
+        <div class="label">Способ оплаты</div>
+        <div class="methods">
+            <div class="method active" id="method-card" onclick="setMethod('card')">Карта / СБП</div>
+            <div class="method" id="method-stars" onclick="setMethod('stars')">Telegram Stars</div>
         </div>
-        <input type="number" id="amountInput" value="300" inputmode="numeric">
-        <div class="converter-hint">Итого на баланс: <span id="starCount">0</span> ★</div>
+
+        <div class="input-section">
+            <input type="number" id="amountInput" value="300" inputmode="numeric">
+            <div class="converter-hint">
+                Итого на баланс: <span id="oldStarCount"></span><span id="starCount" style="color: var(--star-gold); font-weight: bold;">0</span> ★
+            </div>
+        </div>
+
+        <div id="presetsContainer" class="presets"></div>
+
+        <div class="promo-wrapper" id="promoWrapper">
+            <div class="promo-banner">
+                <span class="promo-text">✨ Бонус на первый депозит 120%!</span>
+                <div class="promo-timer" id="timer">10:00</div>
+            </div>
+        </div>
+
+        <button class="pay-button" onclick="showConfirm()">Пополнить</button>
     </div>
-    <div class="presets" id="presetsContainer"></div>
-    <button class="pay-button" onclick="handlePayment()">Пополнить</button>
-</div>
 
-<script>
-    const canvas = document.getElementById('starCanvas');
-    const ctx = canvas.getContext('2d');
-    let width, height, stars = [];
-    const STAR_COUNT = 500; // Уменьшил количество для лучшего рендеринга свечения
-    const SPEED = 0.45;
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="confirm-modal">
+            <div class="confirm-title">Подтверждение оплаты</div>
 
-    function initStars() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-        stars = [];
-        for (let i = 0; i < STAR_COUNT; i++) {
-            stars.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                z: Math.random() * width,
-                ox: Math.random() > 0.5 ? width * 0.15 : width * 0.85
-            });
-        }
-    }
+            <div class="confirm-row">
+                <div class="confirm-label">Способ оплаты:</div>
+                <div class="confirm-value" id="modalMethod">Банковская карта / СБП</div>
+            </div>
 
-    function drawStars() {
-        // Очистка с легким шлейфом
-        ctx.fillStyle = "rgba(5, 5, 8, 0.8)";
-        ctx.fillRect(0, 0, width, height);
+            <div class="confirm-row">
+                <div class="confirm-label">Количество звёзд:</div>
+                <div class="confirm-value"><span id="modalStars" style="color: var(--star-gold)">0</span> ★</div>
+            </div>
 
-        for (let i = 0; i < STAR_COUNT; i++) {
-            let s = stars[i];
-            s.z -= SPEED;
+            <div class="confirm-row">
+                <div class="confirm-label">Сумма к оплате:</div>
+                <div class="confirm-value" id="modalAmount">300 ₽</div>
+            </div>
 
-            if (s.z <= 0) {
-                s.z = width;
-                s.x = Math.random() * width;
-                s.y = Math.random() * height;
-            }
+            <div class="confirm-row">
+                <div class="confirm-label">Ваш email для отправки чека:</div>
+                <input type="email" id="emailInput" class="email-input" placeholder="example@mail.ru">
+            </div>
 
-            const k = 128 / s.z;
-            const px = (s.x - s.ox) * k + s.ox;
-            const py = (s.y - height/2) * k + height/2;
+            <button class="pay-button" style="margin-top: 10px;" onclick="finalPay()">Оплатить</button>
+            <button class="cancel-btn" onclick="closeModal()">Отмена</button>
 
-            if (px >= 0 && px <= width && py >= 0 && py <= height) {
-                const size = (1 - s.z / width) * 3;
-                const opacity = (1 - s.z / width);
+            <div class="modal-footer">
+                Для перехода на страницу оплаты нажмите кнопку «Оплатить».
+            </div>
+        </div>
+    </div>
 
-                // Рендерим свечение градиентом
-                const gradient = ctx.createRadialGradient(px, py, 0, px, py, size * 2.5);
-                gradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`); // Ядро звезды
-                gradient.addColorStop(0.2, `rgba(150, 200, 255, ${opacity * 0.6})`); // Голубоватый ореол
-                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // Растворение в темноте
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(px, py, size * 2.5, 0, Math.PI * 2);
-                ctx.fill();
+        // --- ЛОГИКА ФОНА ---
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, centerX, centerY, stars = [];
+        const STAR_COUNT = 1000;
+        const SPEED = 0.35;
+
+        function initStars() {
+            width = window.innerWidth; height = window.innerHeight;
+            centerX = width / 2; centerY = height / 2;
+            canvas.width = width; canvas.height = height;
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push({ x: Math.random() * width - centerX, y: Math.random() * height - centerY, z: Math.random() * width });
             }
         }
-        requestAnimationFrame(drawStars);
-    }
 
-    // Твоя логика (WebApp) без единого изменения
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    const SERVICES = [
-        { name: "🔮 Расклад", cost: 50 },
-        { name: "❤️ Общение", cost: 120 },
-        { name: "🃏 Доп карта", cost: 350 },
-    ];
-    const CONFIG = { rates: { card: 0.5, stars: 1.0 }, presets: [150, 300, 500, 1500], defaultAmount: 300 };
-    let currentMethod = 'card';
-
-    function renderPrices() {
-        document.getElementById('priceListContainer').innerHTML = SERVICES.map(s => `
-            <div class="price-item"><span>${s.name}</span><span class="service-cost">${s.cost} ★</span></div>
-        `).join('');
-    }
-    function renderPresets() {
-        document.getElementById('presetsContainer').innerHTML = CONFIG.presets.map(amount => `
-            <button class="preset-btn ${amount === CONFIG.defaultAmount ? 'active' : ''}" onclick="updateAmount(${amount}, this)">${amount}</button>
-        `).join('');
-    }
-    function updateConversion() {
-        const val = parseFloat(document.getElementById('amountInput').value) || 0;
-        const result = Math.floor(val * CONFIG.rates[currentMethod]);
-        document.getElementById('starCount').textContent = result.toLocaleString();
-    }
-    function updateAmount(val, el) {
-        document.getElementById('amountInput').value = val;
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        updateConversion();
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-    }
-    function setMethod(method) {
-        currentMethod = method;
-        document.getElementById('method-card').classList.toggle('active', method === 'card');
-        document.getElementById('method-stars').classList.toggle('active', method === 'stars');
-        const labelText = document.getElementById('labelText'), labelIcon = document.getElementById('labelIcon'), btn = document.querySelector('.pay-button');
-        if (method === 'stars') {
-            labelText.textContent = "Сумма в Telegram stars"; labelIcon.src = "star.png";
-            btn.style.background = 'linear-gradient(135deg, #FFD700, #FFA500)'; btn.style.color = '#000';
-        } else {
-            labelText.textContent = "Сумма в рублях"; labelIcon.src = "card.png";
-            btn.style.background = 'var(--accent-color)'; btn.style.color = '#fff';
+        function updateStars() {
+            ctx.clearRect(0, 0, width, height);
+            for (let s of stars) {
+                s.z -= SPEED;
+                if (s.z <= 0) { s.z = width; s.x = Math.random() * width - centerX; s.y = Math.random() * height - centerY; }
+                const pX = (s.x / s.z) * (width * 0.5) + centerX;
+                const pY = (s.y / s.z) * (height * 0.5) + centerY;
+                const size = (1 - s.z / width) * 2.2;
+                const opacity = (1 - s.z / width) * 0.8;
+                ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.beginPath(); ctx.arc(pX, pY, size, 0, Math.PI * 2); ctx.fill();
+            }
+            requestAnimationFrame(updateStars);
         }
-        updateConversion();
-        if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
-    }
-    function handlePayment() {
-        const amount = document.getElementById('amountInput').value;
-        const stars = document.getElementById('starCount').textContent;
-        tg.sendData(JSON.stringify({ method: currentMethod, input_amount: parseInt(amount), final_stars: stars }));
-    }
 
-    window.addEventListener('resize', initStars);
-    document.getElementById('amountInput').addEventListener('input', updateConversion);
-    initStars();
-    drawStars();
-    renderPrices();
-    renderPresets();
-    updateConversion();
-</script>
+        // --- ЛОГИКА ТАЙМЕРА ---
+        let timeLeft = 600;
+        function startTimer() {
+            const timerElement = document.getElementById('timer');
+            const countdown = setInterval(() => {
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                timerElement.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+                if (timeLeft <= 0) { clearInterval(countdown); document.getElementById('promoWrapper').remove(); }
+                timeLeft--;
+            }, 1000);
+        }
+
+        // --- ЛОГИКА ОКНА ПОДТВЕРЖДЕНИЯ ---
+        function showConfirm() {
+            const amount = document.getElementById('amountInput').value;
+            const starsCount = document.getElementById('starCount').textContent;
+
+            document.getElementById('modalMethod').textContent = (currentMethod === 'card') ? 'Банковская карта / СБП' : 'Telegram Stars';
+            document.getElementById('modalStars').textContent = starsCount;
+            document.getElementById('modalAmount').textContent = amount + (currentMethod === 'card' ? ' ₽' : ' ★');
+
+            document.getElementById('modalOverlay').style.display = 'flex';
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        function finalPay() {
+            const email = document.getElementById('emailInput').value;
+            if (!email || !email.includes('@')) {
+                alert('Пожалуйста, введите корректный email для отправки чека');
+                return;
+            }
+
+            tg.sendData(JSON.stringify({
+                method: currentMethod,
+                amount: document.getElementById('amountInput').value,
+                stars: document.getElementById('starCount').textContent,
+                email: email
+            }));
+        }
+
+        // --- ЛОГИКА КОНВЕРТАЦИИ ---
+        const SERVICES = [{ name: "🔮 Расклад", cost: 50 }, { name: "❤️ Общение", cost: 120 }, { name: "🃏 Доп карта", cost: 350 }];
+        const CONFIG = { rates: { card: 0.5, stars: 1.0 }, presets: [150, 300, 500, 1500], defaultAmount: 300 };
+        let currentMethod = 'card';
+
+        function renderPrices() {
+            document.getElementById('priceListContainer').innerHTML = SERVICES.map(s => `
+                <div class="price-item"><span>${s.name}</span><span class="service-cost">${s.cost} ★</span></div>
+            `).join('');
+        }
+
+        function renderPresets() {
+            document.getElementById('presetsContainer').innerHTML = CONFIG.presets.map(amount => `
+                <button class="preset-btn ${amount === CONFIG.defaultAmount ? 'active' : ''}" onclick="updateAmount(${amount}, this)">${amount}</button>
+            `).join('');
+        }
+
+        function updateConversion() {
+            const val = parseFloat(document.getElementById('amountInput').value) || 0;
+            const rate = CONFIG.rates[currentMethod];
+            const baseResult = Math.floor(val * rate);
+            const multiplier = (val >= 300 && timeLeft > 0) ? 1.2 : 1.0;
+            const finalResult = Math.floor(baseResult * multiplier);
+
+            document.getElementById('starCount').textContent = finalResult.toLocaleString();
+            const oldStar = document.getElementById('oldStarCount');
+            if (multiplier > 1) {
+                oldStar.textContent = baseResult.toLocaleString();
+                oldStar.style.display = 'inline-block';
+            } else {
+                oldStar.style.display = 'none';
+            }
+        }
+
+        function updateAmount(val, el) {
+            document.getElementById('amountInput').value = val;
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            updateConversion();
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function setMethod(method) {
+            currentMethod = method;
+            document.getElementById('method-card').classList.toggle('active', method === 'card');
+            document.getElementById('method-stars').classList.toggle('active', method === 'stars');
+            updateConversion();
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        // Расщепление (искорки)
+        function createSparkle() {
+            const wrapper = document.getElementById('promoWrapper');
+            if (!wrapper) return;
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            const rect = wrapper.getBoundingClientRect();
+            sparkle.style.left = Math.random() * rect.width + 'px';
+            sparkle.style.top = Math.random() * rect.height + 'px';
+            sparkle.style.setProperty('--x', (Math.random() * 40 - 20) + 'px');
+            sparkle.style.setProperty('--y', (Math.random() * 40 - 20) + 'px');
+            wrapper.appendChild(sparkle);
+            setTimeout(() => sparkle.remove(), 1500);
+        }
+        setInterval(createSparkle, 150);
+
+        window.addEventListener('resize', initStars);
+        document.getElementById('amountInput').addEventListener('input', updateConversion);
+
+        initStars(); updateStars(); renderPrices(); renderPresets(); updateConversion(); startTimer();
+    </script>
 </body>
 </html>
