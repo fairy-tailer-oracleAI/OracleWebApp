@@ -80,6 +80,14 @@
             transition: border-color 0.3s;
         }
 
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.2); /* Тот самый прозрачный белый нолик */
+            opacity: 1;
+        }
+
+        /* Убираем стандартные стили для некоторых браузеров */
+        input::-webkit-input-placeholder { color: rgba(255, 255, 255, 0.2); }
+
         .currency-suffix {
             position: absolute;
             pointer-events: none;
@@ -274,7 +282,7 @@
 
         <div class="input-section">
             <div class="input-wrapper">
-                <input type="number" id="amountInput" value="300" inputmode="numeric">
+                <input type="number" id="amountInput" value="300" placeholder="0" inputmode="numeric">
                 <div id="currencySuffix" class="currency-suffix">₽</div>
             </div>
 
@@ -413,16 +421,23 @@
         function adjustSuffix() {
             const input = document.getElementById('amountInput');
             const suffix = document.getElementById('currencySuffix');
+
+            // Если в инпуте пусто, берем "0" для расчета ширины (чтобы значок не прыгал в центр)
+            const val = input.value || "0";
+
             const tempSpan = document.createElement('span');
             tempSpan.style.font = window.getComputedStyle(input).font;
-            tempSpan.innerText = input.value;
+            tempSpan.style.visibility = 'hidden';
+            tempSpan.style.position = 'absolute';
+            tempSpan.innerText = val;
             document.body.appendChild(tempSpan);
+
             const textWidth = tempSpan.getBoundingClientRect().width;
             document.body.removeChild(tempSpan);
+
             const offset = (textWidth / 2) + 15;
             suffix.style.transform = `translateX(${offset}px)`;
         }
-
         const SERVICES = [{ name: "🔮 Расклад", cost: 50 }, { name: "❤️ Общение", cost: 120 }, { name: "🃏 Доп карта", cost: 350 }];
         let currentMethod = 'card';
 
@@ -433,14 +448,17 @@
         }
 
         function updateConversion() {
-            const val = parseFloat(document.getElementById('amountInput').value) || 0;
+            const inputVal = document.getElementById('amountInput').value;
+            const val = parseFloat(inputVal) || 0; // Если пусто, считаем как 0
+
             const base = Math.floor(val * (currentMethod === 'card' ? 0.5 : 1.0));
             const mult = (val >= 300 && timeLeft > 0) ? 1.2 : 1.0;
             const final = Math.floor(base * mult);
 
             document.getElementById('starCount').textContent = final.toLocaleString();
+
             const old = document.getElementById('oldStarCount');
-            if (mult > 1) {
+            if (mult > 1 && val > 0) { // Показываем зачеркнутую цену только если введено число
                 old.textContent = base.toLocaleString();
                 old.style.display = 'inline-block';
             } else {
