@@ -280,7 +280,7 @@
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(5, 5, 7, 0.85); /* Чуть больше прозрачности для звезд */
+            background: rgba(5, 5, 7, 0.85);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             display: none;
@@ -291,29 +291,29 @@
         }
 
         .success-card {
-            background: var(--card-bg); /* Такая же подложка как у формы оплаты */
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.05); /* Лунная полупрозрачность */
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             width: 100%;
             max-width: 360px;
             border-radius: 28px;
             padding: 40px 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Светлая рамка */
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
             animation: fadeInScale 0.5s ease-out forwards;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(157, 80, 187, 0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 25px rgba(255, 255, 255, 0.1); /* Лунное свечение внутри */
         }
 
         .success-icon {
-            width: 100px;
-            height: 100px;
-            object-fit: contain; /* Картинка больше не будет сплющиваться */
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
             margin-bottom: 20px;
-            filter: drop-shadow(0 0 25px rgba(157, 80, 187, 0.5));
-            animation: pulseLove 2s infinite ease-in-out;
+            filter: drop-shadow(0 0 15px rgba(255, 102, 102, 0.3)); /* Мягкое светло-красное свечение */
+            animation: pulseLove 4s infinite ease-in-out; /* Замедлил до 4 секунд */
         }
 
         .success-title {
@@ -329,7 +329,7 @@
 
         .success-message {
             font-size: 15px;
-            color: var(--secondary-text);
+            color: rgba(255, 255, 255, 0.85); /* Чуть светлее текст на белом фоне */
             line-height: 1.5;
             margin-bottom: 32px;
             padding: 0 10px;
@@ -337,7 +337,7 @@
 
         .success-btn {
             width: 100%;
-            background: var(--accent-color); /* Сделали кнопку акцентной, как главную */
+            background: var(--accent-color);
             border: none;
             border-radius: 16px;
             padding: 18px;
@@ -359,7 +359,7 @@
 
         @keyframes pulseLove {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); filter: drop-shadow(0 0 30px rgba(157, 80, 187, 0.7)); }
+            50% { transform: scale(1.04); filter: drop-shadow(0 0 20px rgba(255, 102, 102, 0.5)); } /* Более плавное увеличение */
         }
     </style>
 </head>
@@ -483,10 +483,10 @@
     <div class="success-overlay" id="successScreen">
         <div class="success-card">
             <img src="love.png" class="success-icon" alt="love">
-            <div class="success-title">Спасибо за поддержку! ✨</div>
+            <div class="success-title">Спасибо <br> за поддержку!</div>
             <div class="success-message">
                 Ваш платеж успешно завершен.<br><br>
-                Каждая ваша звездочка помогает нам становиться лучше и зажигает новые созвездия в нашей вселенной. Спасибо, что вы с нами! 💜
+                Каждая ваша звездочка помогает нам становиться лучше и зажигает новые созвездия в нашей вселенной. <br>Спасибо, что вы с нами! 💜
             </div>
             <button class="success-btn" onclick="tg.close()">Вернуться в бота</button>
         </div>
