@@ -15,7 +15,6 @@
             --secondary-text: #8e8e93;
             --cosmic-primary: #00d2ff;
             --cosmic-secondary: #9d50bb;
-            --star-glow: rgba(138, 43, 226, 0.6);
         }
 
         * {
@@ -66,9 +65,6 @@
             width: 20px !important;
             height: 20px !important;
             filter: none !important;
-            -webkit-filter: none !important;
-            box-shadow: none !important;
-            border: none !important;
             vertical-align: middle;
         }
 
@@ -86,16 +82,8 @@
         }
 
         input::placeholder { color: rgba(255, 255, 255, 0.3); opacity: 1; }
-        input::-webkit-input-placeholder { color: rgba(255, 255, 255, 0.3); }
 
         #amountInput::placeholder {
-            color: rgba(224, 242, 255, 0.15);
-            text-shadow: 0 0 2px rgba(255, 255, 255, 0.1), 0 0 8px rgba(173, 216, 230, 0.2);
-            -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.1);
-            opacity: 1;
-        }
-
-        #amountInput::-webkit-input-placeholder {
             color: rgba(224, 242, 255, 0.15);
             text-shadow: 0 0 2px rgba(255, 255, 255, 0.1), 0 0 8px rgba(173, 216, 230, 0.2);
             -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.1);
@@ -128,17 +116,6 @@
             top: 0.7px;
             filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.4))
                     drop-shadow(0 0 10px rgba(157, 80, 187, 0.3));
-            -webkit-transform: translate3d(0, 0, 0);
-            transform: translate3d(0, 0, 0);
-            will-change: filter;
-        }
-
-        .confirm-value img {
-            width: 34px;
-            height: 24px;
-            margin-left: -4px;
-            vertical-align: middle;
-            filter: none !important;
         }
 
         div.confirm-modal div.confirm-value2 img {
@@ -172,8 +149,6 @@
             border-radius: 14px;
             padding: 12px;
             text-align: center;
-            overflow: visible;
-            background-clip: padding-box;
         }
 
         .promo-text {
@@ -186,7 +161,7 @@
         .promo-timer {
             font-family: 'Courier New', monospace; font-size: 18px; font-weight: 900; color: #f0faff;
             text-shadow: 0 0 8px rgba(255, 255, 255, 0.8), 0 0 15px rgba(138, 180, 248, 0.5), 0 0 25px rgba(255, 255, 255, 0.2);
-            letter-spacing: 2px; display: inline-block; transition: transform 0.2s ease-out, text-shadow 0.2s ease-out; will-change: transform;
+            letter-spacing: 2px; display: inline-block;
         }
 
         .promo-spark {
@@ -218,12 +193,13 @@
         .preset-btn { flex: 1; background: rgba(255, 255, 255, 0.08); border: none; border-radius: 20px; padding: 10px 0; color: var(--text-color); font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation; }
         .preset-btn.active { background: var(--text-color); color: #000; }
 
-        /* Стили для ошибки */
+        /* ОПТИМИЗАЦИЯ ОШИБКИ: Место под ошибку зарезервировано всегда, чтобы модалка не "прыгала" в размерах */
         #emailError {
             color: #ff453a;
             font-size: 12px;
             margin-top: 6px;
-            display: none;
+            min-height: 15px; /* Зафиксировали высоту */
+            visibility: hidden; /* Скрываем без удаления из макета */
             text-align: center;
             font-weight: 500;
         }
@@ -288,7 +264,7 @@
 
             <div class="confirm-row" id="emailRow">
                 <div class="confirm-label">Ваш email:</div>
-                <input type="email" id="emailInput" placeholder="example@mail.ru" style="width:100%; border-radius:12px; border:1px solid #333; text-align: left; font-size: 16px; padding: 12px; background: rgba(255,255,255,0.05); color: #fff;">
+                <input type="email" id="emailInput" placeholder="example@mail.ru" style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2); text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;">
                 <div id="emailError">Введите корректный email (с символом @)</div>
             </div>
 
@@ -302,15 +278,7 @@
         tg.expand();
         tg.ready();
 
-        document.addEventListener('touchstart', (e) => {
-            const isClickable = e.target.closest('button, .method, .pay-button, .cancel-btn');
-            if (e.target.tagName !== 'INPUT' && !isClickable) {
-                const activeEl = document.activeElement;
-                if (activeEl && activeEl.tagName === 'INPUT') {
-                    activeEl.blur();
-                }
-            }
-        }, { passive: true });
+        // УДАЛИЛ глобальный хак touchstart — именно он "ломал" фокус и блокировал повторные нажатия кнопок на смартфонах.
 
         const UI = {
             amountInput: document.getElementById('amountInput'),
@@ -327,14 +295,15 @@
             modalAmount: document.getElementById('modalAmount'),
             emailRow: document.getElementById('emailRow'),
             emailInput: document.getElementById('emailInput'),
-            emailError: document.getElementById('emailError'), // Кешируем элемент ошибки
+            emailError: document.getElementById('emailError'),
             priceList: document.getElementById('priceListContainer'),
             presets: document.getElementById('presetsContainer')
         };
 
-        const SPARK_COUNT_PER_TICK = 6;
-        const SPARK_SPEED = 20;
-        const SPARK_LIFETIME = 2.5;
+        // ОПТИМИЗАЦИЯ производительности: Уменьшили частоту и количество частиц
+        const SPARK_COUNT_PER_TICK = 2;
+        const SPARK_SPEED = 15;
+        const SPARK_LIFETIME = 1.5;
         const STAR_ICON_HTML = '<img src="starxd.png" class="star-icon" alt="star">';
         const SUFFIX_STAR_HTML = '<img src="star.png" alt="star" class="suffix-icon-no-glow">';
 
@@ -361,7 +330,9 @@
             width = window.innerWidth; height = window.innerHeight;
             canvas.width = width; canvas.height = height;
             stars = [];
-            for (let i = 0; i < 800; i++) {
+            // ОПТИМИЗАЦИЯ: на мобильных устройствах достаточно 200 частиц вместо 800
+            const numStars = width < 600 ? 200 : 400;
+            for (let i = 0; i < numStars; i++) {
                 stars.push({ x: Math.random() * width - width/2, y: Math.random() * height - height/2, z: Math.random() * width });
             }
         }
@@ -380,7 +351,7 @@
         }
 
         function createPromoSparkle() {
-            if (!UI.promoWrapper) return;
+            if (!UI.promoWrapper || document.hidden) return; // Не рендерим, если приложение свернуто
             const b = UI.promoWrapper.getBoundingClientRect();
             if (b.width === 0) return;
 
@@ -422,7 +393,7 @@
 
             setInterval(() => {
                 if (timeLeft > 0) createPromoSparkle();
-            }, 150);
+            }, 350); // ОПТИМИЗАЦИЯ: увеличили интервал между искрами с 150мс до 350мс
         }
 
         function adjustSuffix() {
@@ -493,34 +464,37 @@
         function closeModal() {
             vibrate();
 
-            // ПРИНУДИТЕЛЬНО снимаем фокус с инпута перед закрытием,
-            // чтобы он не "застревал" в памяти браузера
+            // Принудительно гасим клавиатуру, чтобы она не сдвигала фокус при скрытии модалки
             UI.emailInput.blur();
 
             UI.modalOverlay.style.display = 'none';
 
-            // Сбрасываем ошибку, чтобы при следующем открытии всё было чисто
-            UI.emailError.style.display = 'none';
-            UI.emailInput.style.borderColor = '#333';
+            // Очищаем ошибку для следующего раза
+            UI.emailError.style.visibility = 'hidden';
+            UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
         }
 
         function finalPay() {
             vibrate();
             let email = '';
 
+            // При попытке оплаты сразу прячем клавиатуру (снимаем фокус)
+            // Это гарантирует, что следующий тап по экрану сработает сразу на кнопку
+            UI.emailInput.blur();
+
             if (currentMethod === 'card') {
                 email = UI.emailInput.value;
                 if (!email.includes('@')) {
-                    // Показываем ошибку ВНУТРИ интерфейса, без системных алертов
+                    // Подсвечиваем красным
                     UI.emailInput.style.borderColor = '#ff453a';
-                    UI.emailError.style.display = 'block';
+                    UI.emailError.style.visibility = 'visible';
                     return;
                 }
             }
 
-            // Если всё ок, сбрасываем стили ошибки
-            UI.emailError.style.display = 'none';
-            UI.emailInput.style.borderColor = '#333';
+            // Если всё окей — сбрасываем стиль ошибки
+            UI.emailError.style.visibility = 'hidden';
+            UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
 
             tg.sendData(JSON.stringify({
                 amount: UI.amountInput.value,
@@ -533,10 +507,10 @@
             }
         }
 
-        // Скрываем ошибку, как только пользователь начинает исправлять почту
+        // Прячем ошибку, если пользователь начал вводить заново
         UI.emailInput.addEventListener('input', () => {
-            UI.emailError.style.display = 'none';
-            UI.emailInput.style.borderColor = '#333';
+            UI.emailError.style.visibility = 'hidden';
+            UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
         });
 
         // Рендер пресетов
