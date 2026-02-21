@@ -60,9 +60,9 @@
         .suffix-icon-no-glow {
             width: 20px !important;
             height: 20px !important;
-            filter: none !important; /* Убирает свечение */
+            filter: none !important;
             -webkit-filter: none !important;
-            box-shadow: none !important; /* Убирает возможные тени */
+            box-shadow: none !important;
             border: none !important;
             vertical-align: middle;
         }
@@ -80,13 +80,31 @@
             transition: border-color 0.3s;
         }
 
+        /* Общие плейсхолдеры (например, для модалки email) */
         input::placeholder {
-            color: rgba(255, 255, 255, 0.2); /* Тот самый прозрачный белый нолик */
+            color: rgba(255, 255, 255, 0.3);
+            opacity: 1;
+        }
+        input::-webkit-input-placeholder { color: rgba(255, 255, 255, 0.3); }
+
+        /* Эффект стеклянного лунного нолика для главного поля */
+        #amountInput::placeholder {
+            color: rgba(224, 242, 255, 0.15); /* Очень слабый холодный оттенок */
+            /* Текстовая тень создает эффект объема и свечения внутри стекла */
+            text-shadow:
+                0 0 2px rgba(255, 255, 255, 0.1),
+                0 0 8px rgba(173, 216, 230, 0.2);
+            /* Эффект тонкого ледяного контура (работает в WebKit/Telegram) */
+            -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.1);
             opacity: 1;
         }
 
-        /* Убираем стандартные стили для некоторых браузеров */
-        input::-webkit-input-placeholder { color: rgba(255, 255, 255, 0.2); }
+        /* Дублируем для Safari/iOS (Telegram WebApp часто на нем) */
+        #amountInput::-webkit-input-placeholder {
+            color: rgba(224, 242, 255, 0.15);
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.1), 0 0 8px rgba(173, 216, 230, 0.2);
+            -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.1);
+        }
 
         .currency-suffix {
             position: absolute;
@@ -96,7 +114,7 @@
             color: var(--text-color);
             display: flex;
             align-items: center;
-            transition: transform 0.1s ease-out; /* Плавное движение за цифрами */
+            transition: transform 0.1s ease-out;
         }
 
         .currency-suffix img {
@@ -121,7 +139,7 @@
             height: 24px;
             margin-left: -4px;
             vertical-align: middle;
-            filter: none !important; /* Убираем свечение, как ты и просил */
+            filter: none !important;
         }
 
         div.confirm-modal div.confirm-value2 img {
@@ -130,11 +148,9 @@
             filter: none !important;
             margin-left: 1.4px !important;
             display: inline-block !important;
-
-            /* Вот это магическая связка */
             position: relative !important;
-            top: 1.4px !important; /* Отрицательное значение тянет вверх, положительное — вниз */
-            vertical-align: baseline !important; /* Сбрасываем middle, чтобы контролировать top */
+            top: 1.4px !important;
+            vertical-align: baseline !important;
         }
 
         .label { font-size: 11px; text-transform: uppercase; color: var(--secondary-text); margin-bottom: 10px; font-weight: 700; letter-spacing: 0.5px; }
@@ -155,26 +171,18 @@
 
         .promo-banner {
             position: relative;
-            /* Прозрачный фон с легким холодным оттенком */
             background: rgba(224, 242, 255, 0.05);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-
-            /* Лунно-белая рамка с прозрачностью */
             border: 0.1px solid rgba(255, 255, 255, 0.4);
-
-            /* Многослойное лунное свечение */
             box-shadow:
-                0 8px 32px 0 rgba(0, 0, 0, 0.8),          /* Тень для объема */
-                0 0 10px 0 rgba(224, 242, 255, 0.2),      /* Внешний мягкий ореол */
-                inset 0 0 12px 0 rgba(255, 255, 255, 0.1); /* Внутренний свет */
-
+                0 8px 32px 0 rgba(0, 0, 0, 0.8),
+                0 0 10px 0 rgba(224, 242, 255, 0.2),
+                inset 0 0 12px 0 rgba(255, 255, 255, 0.1);
             border-radius: 14px;
             padding: 12px;
             text-align: center;
             overflow: visible;
-
-            /* Дополнительный блеск на гранях */
             background-clip: padding-box;
         }
         .promo-text {
@@ -183,14 +191,10 @@
             display: block;
             margin-bottom: 6px;
             text-transform: uppercase;
-            letter-spacing: 1px; /* Чуть увеличил для "воздушности" */
-
-            /* Лунно-белый градиент: от чистого белого к легкому серебру */
+            letter-spacing: 1px;
             background: linear-gradient(180deg, #FFFFFF 0%, #e0f2ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-
-            /* Мягкое белое свечение вместо фиолетового */
             filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 10px rgba(173, 216, 230, 0.2));
         }
 
@@ -205,14 +209,12 @@
                 0 0 25px rgba(255, 255, 255, 0.2);
             letter-spacing: 2px;
             display: inline-block;
-            /* Плавный возврат в исходное состояние */
             transition: transform 0.2s ease-out, text-shadow 0.2s ease-out;
             will-change: transform;
         }
 
-        /* Класс, который будет "вспыхивать" каждую секунду */
         .timer-beat {
-            transform: scale(1.15); /* Резкий рывок вперед */
+            transform: scale(1.15);
             text-shadow:
                 0 0 15px rgba(255, 255, 255, 1),
                 0 0 30px rgba(138, 180, 248, 0.8);
@@ -226,25 +228,14 @@
             border-radius: 50%;
             pointer-events: none;
             z-index: 20;
-            /* Мягкое свечение */
             box-shadow: 0 0 3px #fff, 0 0 6px var(--cosmic-primary);
             opacity: 0;
         }
 
         @keyframes sparkleOut {
-            0% {
-                transform: translate(0, 0) scale(0);
-                opacity: 0;
-            }
-            20% {
-                opacity: 0.8;
-                transform: scale(1.2);
-            }
-            100% {
-                /* Использование плавного перемещения к конечной точке */
-                transform: translate(var(--tx), var(--ty)) scale(0.3);
-                opacity: 0;
-            }
+            0% { transform: translate(0, 0) scale(0); opacity: 0; }
+            20% { opacity: 0.8; transform: scale(1.2); }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0.3); opacity: 0; }
         }
         /* --- МОДАЛКА --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
@@ -258,7 +249,8 @@
         .cancel-btn { background: transparent; color: var(--secondary-text); border: none; margin-top: 12px; width: 100%; font-size: 14px; }
 
         .converter-hint { text-align: center; font-size: 13px; color: var(--secondary-text); margin-top: 8px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; }
-        #oldStarCount { text-decoration: line-through; margin-right: 6px; opacity: 0.35; display: none; }
+
+        #oldStarCount { text-decoration: line-through; margin-right: 3px; opacity: 0.35; display: none; }
 
         .presets { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 24px; }
         .preset-btn { flex: 1; background: rgba(255, 255, 255, 0.08); border: none; border-radius: 20px; padding: 10px 0; color: var(--text-color); font-size: 13px; font-weight: 600; }
@@ -287,9 +279,10 @@
             </div>
 
             <div class="converter-hint">
-                Итого на баланс: <span id="oldStarCount"></span>
-                <span id="starCount" style="color: #fff; font-weight: 800;">0</span>
-                <img src="starxd.png" class="star-icon" alt="star">
+                Итого на баланс:&nbsp;
+                <span id="oldStarCount"></span>
+                <span id="starCount" style="color: #fff; font-weight: 800; margin-left: 4px;">0</span>
+                <img src="starxd.png" class="star-icon" style="width:34px; height:24px;" alt="star">
             </div>
         </div>
 
@@ -320,10 +313,13 @@
                 <div class="confirm-label">Сумма к оплате:</div>
                 <div id="modalAmount" class="confirm-value2">0 ₽</div>
             </div>
-            <div class="confirm-row">
+
+            <!-- Поле email, которое будет скрыто для Stars -->
+            <div class="confirm-row" id="emailRow">
                 <div class="confirm-label">Ваш email:</div>
                 <input type="email" id="emailInput" placeholder="example@mail.ru" style="width:100%; border-radius:12px; border:1px solid #333; text-align: left; font-size: 16px; padding: 12px; background: rgba(255,255,255,0.05); color: #fff;">
             </div>
+
             <button class="pay-button" style="margin-top: 10px;" onclick="finalPay()">Оплатить</button>
             <button class="cancel-btn" onclick="closeModal()">Отмена</button>
         </div>
@@ -333,11 +329,16 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // --- НАСТРОЙКИ ИСКР (ПЛАВНЫЙ РЕЖИМ) ---
-        const SPARK_COUNT_PER_TICK = 6;   // Чуть меньше частиц для чистоты
-        const SPARK_SPEED = 20;           // Было 80, стало 30 (медленный дрейф)
-        const SPARK_LIFETIME = 2.5;       // Было 1.2, стало 2.5 (живут дольше)
-        // --------------------------------------------
+        // Функция для тактильной вибрации (Haptic Feedback)
+        function vibrate() {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        const SPARK_COUNT_PER_TICK = 6;
+        const SPARK_SPEED = 20;
+        const SPARK_LIFETIME = 2.5;
 
         const STAR_ICON_HTML = '<img src="starxd.png" class="star-icon" alt="star">';
         const SUFFIX_STAR_HTML = '<img src="star.png" alt="star" class="suffix-icon-no-glow">';
@@ -401,7 +402,6 @@
 
         function startTimer() {
             const el = document.getElementById('timer');
-            // Логика времени
             const timerInterval = setInterval(() => {
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
@@ -412,7 +412,6 @@
                 el.textContent = `${m}:${s < 10 ? '0' + s : s}`;
             }, 1000);
 
-            // Логика искр
             setInterval(() => {
                 if (timeLeft > 0) createPromoSparkle();
             }, 150);
@@ -422,7 +421,6 @@
             const input = document.getElementById('amountInput');
             const suffix = document.getElementById('currencySuffix');
 
-            // Если в инпуте пусто, берем "0" для расчета ширины (чтобы значок не прыгал в центр)
             const val = input.value || "0";
 
             const tempSpan = document.createElement('span');
@@ -438,6 +436,7 @@
             const offset = (textWidth / 2) + 15;
             suffix.style.transform = `translateX(${offset}px)`;
         }
+
         const SERVICES = [{ name: "🔮 Расклад", cost: 50 }, { name: "❤️ Общение", cost: 120 }, { name: "🃏 Доп карта", cost: 350 }];
         let currentMethod = 'card';
 
@@ -449,25 +448,30 @@
 
         function updateConversion() {
             const inputVal = document.getElementById('amountInput').value;
-            const val = parseFloat(inputVal) || 0; // Если пусто, считаем как 0
+            const val = parseFloat(inputVal) || 0;
 
             const base = Math.floor(val * (currentMethod === 'card' ? 0.5 : 1.0));
             const mult = (val >= 300 && timeLeft > 0) ? 1.2 : 1.0;
             const final = Math.floor(base * mult);
 
-            document.getElementById('starCount').textContent = final.toLocaleString();
+            const starCountEl = document.getElementById('starCount');
+            if (starCountEl) starCountEl.textContent = final.toLocaleString();
 
             const old = document.getElementById('oldStarCount');
-            if (mult > 1 && val > 0) { // Показываем зачеркнутую цену только если введено число
-                old.textContent = base.toLocaleString();
-                old.style.display = 'inline-block';
-            } else {
-                old.style.display = 'none';
+            if (old) {
+                if (mult > 1 && val > 0) {
+                    old.textContent = base.toLocaleString();
+                    old.style.display = 'inline-block';
+                    old.style.marginRight = '3px';
+                } else {
+                    old.style.display = 'none';
+                }
             }
             adjustSuffix();
         }
 
         function setMethod(m) {
+            vibrate(); // Вибрация
             currentMethod = m;
             document.getElementById('method-card').classList.toggle('active', m === 'card');
             document.getElementById('method-stars').classList.toggle('active', m === 'stars');
@@ -476,6 +480,7 @@
         }
 
         function updateAmount(v, el) {
+            vibrate(); // Вибрация
             document.getElementById('amountInput').value = v;
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
@@ -483,28 +488,58 @@
         }
 
         function showConfirm() {
+            vibrate(); // Вибрация
             const amountInput = document.getElementById('amountInput');
             const modalAmountEl = document.getElementById('modalAmount');
             const starCount = document.getElementById('starCount').textContent;
+
             document.getElementById('modalMethod').textContent = currentMethod === 'card' ? 'Карта / СБП' : 'Telegram Stars';
             document.getElementById('modalStars').parentElement.innerHTML = `<span id="modalStars">${starCount}</span> ${STAR_ICON_HTML}`;
+
+            const emailRow = document.getElementById('emailRow');
+
             if (currentMethod === 'stars') {
                 modalAmountEl.innerHTML = `${amountInput.value} <img src="star.png" class="suffix-icon-no-glow" alt="star">`;
+                // Гарантированно убираем поле с помощью !important
+                emailRow.style.setProperty('display', 'none', 'important');
             } else {
                 modalAmountEl.textContent = `${amountInput.value} ₽`;
+                // Показываем поле обратно
+                emailRow.style.setProperty('display', 'flex', 'important');
             }
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
-        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-
-        function finalPay() {
-            const email = document.getElementById('emailInput').value;
-            if (!email.includes('@')) return alert('Введите корректный email');
-            tg.sendData(JSON.stringify({ amount: document.getElementById('amountInput').value, method: currentMethod, email: email }));
+        function closeModal() {
+            vibrate(); // Вибрация
+            document.getElementById('modalOverlay').style.display = 'none';
         }
 
-        // Рендер пресетов
+        function finalPay() {
+            vibrate(); // Вибрация
+            let email = '';
+
+            // Проверяем email только для "Карты"
+            if (currentMethod === 'card') {
+                email = document.getElementById('emailInput').value;
+                if (!email.includes('@')) return alert('Введите корректный email');
+            }
+
+            // Отправляем данные боту (работает для WebApp, открытого через кнопку меню)
+            tg.sendData(JSON.stringify({
+                amount: document.getElementById('amountInput').value,
+                method: currentMethod,
+                email: email
+            }));
+
+            // Закрываем окно Телеграм, если оплата идет Звездами (сработает сразу после отправки данных)
+            if (currentMethod === 'stars') {
+                setTimeout(() => {
+                    tg.close();
+                }, 100); // 100мс задержка, чтобы sendData успел отработать
+            }
+        }
+
         document.getElementById('presetsContainer').innerHTML = [150, 300, 500, 1500].map(v => `
             <button class="preset-btn ${v === 300 ? 'active' : ''}" onclick="updateAmount(${v}, this)">${v}</button>
         `).join('');
@@ -512,12 +547,11 @@
         window.addEventListener('resize', initStars);
         document.getElementById('amountInput').addEventListener('input', updateConversion);
 
-        // Инициализация всего
         initStars();
         updateStars();
         renderPrices();
         updateConversion();
-        startTimer(); // Эта функция теперь запускает и время, и искры`
+        startTimer();
     </script>
 </body>
 </html>
