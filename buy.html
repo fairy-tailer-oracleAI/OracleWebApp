@@ -146,21 +146,71 @@
             border-radius: 14px; padding: 12px; text-align: center; overflow: visible;
         }
         .promo-text {
-            font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;
-            background: linear-gradient(180deg, #FFFFFF 0%, #d2a6ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 8px rgba(157, 80, 187, 0.6));
+            font-size: 13px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px; /* Чуть увеличил для "воздушности" */
+
+            /* Лунно-белый градиент: от чистого белого к легкому серебру */
+            background: linear-gradient(180deg, #FFFFFF 0%, #e0f2ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            /* Мягкое белое свечение вместо фиолетового */
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 10px rgba(173, 216, 230, 0.2));
         }
+
         .promo-timer {
-            font-family: 'Courier New', monospace; font-size: 18px; font-weight: 900; color: #ff00ff;
-            text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff, 0 0 20px #9d50bb; animation: fomo-pulse 0.8s infinite alternate;
-            letter-spacing: 2px; display: inline-block;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: 900;
+
+            /* Цвет холодного лунного света */
+            color: #f0faff;
+
+            /* Многослойное свечение: плотный белый + широкий голубоватый туман */
+            text-shadow:
+                0 0 8px rgba(255, 255, 255, 0.8),
+                0 0 15px rgba(138, 180, 248, 0.5),
+                0 0 25px rgba(255, 255, 255, 0.2);
+
+            animation: fomo-pulse 0.8s infinite alternate;
+            letter-spacing: 2px;
+            display: inline-block;
         }
 
         @keyframes fomo-pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
 
-        .promo-spark { position: absolute; background: #fff; width: 1.5px; height: 1.5px; border-radius: 50%; pointer-events: none; z-index: 10; box-shadow: 0 0 3px #fff, 0 0 6px var(--cosmic-primary); }
-        @keyframes sparkleOut { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+        .promo-spark {
+            position: absolute;
+            background: #fff;
+            width: 1.5px;
+            height: 1.5px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 20;
+            /* Мягкое свечение */
+            box-shadow: 0 0 3px #fff, 0 0 6px var(--cosmic-primary);
+            opacity: 0;
+        }
 
+        @keyframes sparkleOut {
+            0% {
+                transform: translate(0, 0) scale(0);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.8;
+                transform: scale(1.2);
+            }
+            100% {
+                /* Использование плавного перемещения к конечной точке */
+                transform: translate(var(--tx), var(--ty)) scale(0.3);
+                opacity: 0;
+            }
+        }
         /* --- МОДАЛКА --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
         .confirm-modal { background: var(--card-bg); width: 100%; max-width: 340px; border-radius: 24px; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.15); }
@@ -248,12 +298,19 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // --- НАСТРОЙКИ ИСКР (ПЛАВНЫЙ РЕЖИМ) ---
+        const SPARK_COUNT_PER_TICK = 6;   // Чуть меньше частиц для чистоты
+        const SPARK_SPEED = 20;           // Было 80, стало 30 (медленный дрейф)
+        const SPARK_LIFETIME = 2.5;       // Было 1.2, стало 2.5 (живут дольше)
+        // --------------------------------------------
+
         const STAR_ICON_HTML = '<img src="starxd.png" class="star-icon" alt="star">';
         const SUFFIX_STAR_HTML = '<img src="star.png" alt="star" class="suffix-icon-no-glow">';
 
         const canvas = document.getElementById('starCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, stars = [];
+        let timeLeft = 600;
 
         function initStars() {
             width = window.innerWidth; height = window.innerHeight;
@@ -277,34 +334,66 @@
             requestAnimationFrame(updateStars);
         }
 
-        // Динамическое смещение значка валюты
-        function adjustSuffix() {
-            const input = document.getElementById('amountInput');
-            const suffix = document.getElementById('currencySuffix');
-            const val = input.value;
+        function createPromoSparkle() {
+            const wrapper = document.getElementById('promoWrapper');
+            if (!wrapper) return;
+            const b = wrapper.getBoundingClientRect();
 
-            // Создаем невидимый элемент для замера ширины текста
-            const tempSpan = document.createElement('span');
-            tempSpan.style.font = window.getComputedStyle(input).font;
-            tempSpan.innerText = val;
-            document.body.appendChild(tempSpan);
-            const textWidth = tempSpan.getBoundingClientRect().width;
-            document.body.removeChild(tempSpan);
+            for(let i = 0; i < SPARK_COUNT_PER_TICK; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'promo-spark';
 
-            // Двигаем суффикс (текст в инпуте центрирован, поэтому отступ от центра)
-            const offset = (textWidth / 2) + 15;
-            suffix.style.transform = `translateX(${offset}px)`;
+                const side = Math.floor(Math.random() * 4);
+                let x, y, tx, ty;
+
+                if (side === 0) { x = Math.random() * b.width; y = 0; tx = (Math.random() - 0.5) * SPARK_SPEED; ty = -SPARK_SPEED; }
+                else if (side === 1) { x = b.width; y = Math.random() * b.height; tx = SPARK_SPEED; ty = (Math.random() - 0.5) * SPARK_SPEED; }
+                else if (side === 2) { x = Math.random() * b.width; y = b.height; tx = (Math.random() - 0.5) * SPARK_SPEED; ty = SPARK_SPEED; }
+                else { x = 0; y = Math.random() * b.height; tx = -SPARK_SPEED; ty = (Math.random() - 0.5) * SPARK_SPEED; }
+
+                spark.style.left = x + 'px';
+                spark.style.top = y + 'px';
+                spark.style.setProperty('--tx', (tx * (0.5 + Math.random())) + 'px');
+                spark.style.setProperty('--ty', (ty * (0.5 + Math.random())) + 'px');
+
+                const duration = SPARK_LIFETIME * (0.6 + Math.random() * 0.4);
+                spark.style.animation = `sparkleOut ${duration}s forwards ease-out`;
+
+                wrapper.appendChild(spark);
+                setTimeout(() => spark.remove(), duration * 1000);
+            }
         }
 
-        let timeLeft = 600;
         function startTimer() {
             const el = document.getElementById('timer');
-            setInterval(() => {
-                if (timeLeft <= 0) return;
+            // Логика времени
+            const timerInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    return;
+                }
                 timeLeft--;
                 let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
                 el.textContent = `${m}:${s < 10 ? '0' + s : s}`;
             }, 1000);
+
+            // Логика искр
+            setInterval(() => {
+                if (timeLeft > 0) createPromoSparkle();
+            }, 150);
+        }
+
+        function adjustSuffix() {
+            const input = document.getElementById('amountInput');
+            const suffix = document.getElementById('currencySuffix');
+            const tempSpan = document.createElement('span');
+            tempSpan.style.font = window.getComputedStyle(input).font;
+            tempSpan.innerText = input.value;
+            document.body.appendChild(tempSpan);
+            const textWidth = tempSpan.getBoundingClientRect().width;
+            document.body.removeChild(tempSpan);
+            const offset = (textWidth / 2) + 15;
+            suffix.style.transform = `translateX(${offset}px)`;
         }
 
         const SERVICES = [{ name: "🔮 Расклад", cost: 50 }, { name: "❤️ Общение", cost: 120 }, { name: "🃏 Доп карта", cost: 350 }];
@@ -324,9 +413,12 @@
 
             document.getElementById('starCount').textContent = final.toLocaleString();
             const old = document.getElementById('oldStarCount');
-            if (mult > 1) { old.textContent = base.toLocaleString(); old.style.display = 'inline-block'; }
-            else { old.style.display = 'none'; }
-
+            if (mult > 1) {
+                old.textContent = base.toLocaleString();
+                old.style.display = 'inline-block';
+            } else {
+                old.style.display = 'none';
+            }
             adjustSuffix();
         }
 
@@ -334,26 +426,9 @@
             currentMethod = m;
             document.getElementById('method-card').classList.toggle('active', m === 'card');
             document.getElementById('method-stars').classList.toggle('active', m === 'stars');
-
-            const suffix = document.getElementById('currencySuffix');
-            suffix.innerHTML = m === 'card' ? '₽' : SUFFIX_STAR_HTML;
-
+            document.getElementById('currencySuffix').innerHTML = m === 'card' ? '₽' : SUFFIX_STAR_HTML;
             updateConversion();
         }
-
-        function hideKeyboard(e) {
-            // Проверяем, что нажатие было именно по фону, а не по инпуту или кнопке
-            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SELECT') {
-                if (document.activeElement) {
-                    document.activeElement.blur();
-                }
-            }
-        }
-
-        // Слушаем нажатия на всем документе
-        document.addEventListener('touchstart', hideKeyboard);
-        // Дополнительно для десктопа/кликов
-        document.addEventListener('mousedown', hideKeyboard);
 
         function updateAmount(v, el) {
             document.getElementById('amountInput').value = v;
@@ -365,25 +440,17 @@
         function showConfirm() {
             const amountInput = document.getElementById('amountInput');
             const modalAmountEl = document.getElementById('modalAmount');
-            const modalStarsEl = document.getElementById('modalStars');
             const starCount = document.getElementById('starCount').textContent;
-
-            // 1. Способ оплаты
             document.getElementById('modalMethod').textContent = currentMethod === 'card' ? 'Карта / СБП' : 'Telegram Stars';
-
-            // 2. Количество звёзд (используем STAR_ICON_HTML как в основном интерфейсе)
-            modalStarsEl.parentElement.innerHTML = `<span id="modalStars">${starCount}</span> ${STAR_ICON_HTML}`;
-
-            // 3. Сумма к оплате (динамическая замена символа)
+            document.getElementById('modalStars').parentElement.innerHTML = `<span id="modalStars">${starCount}</span> ${STAR_ICON_HTML}`;
             if (currentMethod === 'stars') {
-                // Здесь используем star.png БЕЗ свечения, но с новым размером
                 modalAmountEl.innerHTML = `${amountInput.value} <img src="star.png" class="suffix-icon-no-glow" alt="star">`;
             } else {
                 modalAmountEl.textContent = `${amountInput.value} ₽`;
             }
-
             document.getElementById('modalOverlay').style.display = 'flex';
         }
+
         function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
 
         function finalPay() {
@@ -392,6 +459,7 @@
             tg.sendData(JSON.stringify({ amount: document.getElementById('amountInput').value, method: currentMethod, email: email }));
         }
 
+        // Рендер пресетов
         document.getElementById('presetsContainer').innerHTML = [150, 300, 500, 1500].map(v => `
             <button class="preset-btn ${v === 300 ? 'active' : ''}" onclick="updateAmount(${v}, this)">${v}</button>
         `).join('');
@@ -399,7 +467,12 @@
         window.addEventListener('resize', initStars);
         document.getElementById('amountInput').addEventListener('input', updateConversion);
 
-        initStars(); updateStars(); renderPrices(); updateConversion(); startTimer();
+        // Инициализация всего
+        initStars();
+        updateStars();
+        renderPrices();
+        updateConversion();
+        startTimer(); // Эта функция теперь запускает и время, и искры`
     </script>
 </body>
 </html>
