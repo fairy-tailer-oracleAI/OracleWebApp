@@ -275,36 +275,53 @@
             line-height: 1.4;
         }
 
-        /* === СТИЛИ ЭКРАНА УСПЕХА === */
+        /* === НОВЫЕ СТИЛИ ЭКРАНА УСПЕХА === */
         .success-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(5, 5, 7, 0.95);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            display: none; /* Скрыто по умолчанию */
-            flex-direction: column;
+            background: rgba(5, 5, 7, 0.85); /* Чуть больше прозрачности для звезд */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            padding: 24px;
+            padding: 20px;
+        }
+
+        .success-card {
+            background: var(--card-bg); /* Такая же подложка как у формы оплаты */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            width: 100%;
+            max-width: 360px;
+            border-radius: 28px;
+            padding: 40px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
             animation: fadeInScale 0.5s ease-out forwards;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(157, 80, 187, 0.1);
         }
 
         .success-icon {
-            width: 180px;
-            height: 90px;
-            margin-bottom: 24px;
-            filter: drop-shadow(0 0 20px rgba(157, 80, 187, 0.4));
+            width: 100px;
+            height: 100px;
+            object-fit: contain; /* Картинка больше не будет сплющиваться */
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 25px rgba(157, 80, 187, 0.5));
+            animation: pulseLove 2s infinite ease-in-out;
         }
 
         .success-title {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 800;
             color: #fff;
             margin-bottom: 12px;
+            line-height: 1.2;
             background: linear-gradient(180deg, #FFFFFF 0%, #e0f2ff 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -313,28 +330,26 @@
         .success-message {
             font-size: 15px;
             color: var(--secondary-text);
-            line-height: 1.6;
-            max-width: 300px;
-            margin-bottom: 30px;
+            line-height: 1.5;
+            margin-bottom: 32px;
+            padding: 0 10px;
         }
 
         .success-btn {
             width: 100%;
-            max-width: 250px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--accent-color); /* Сделали кнопку акцентной, как главную */
+            border: none;
             border-radius: 16px;
-            padding: 16px;
+            padding: 18px;
             color: white;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: 0.2s;
+            transition: transform 0.1s;
         }
 
         .success-btn:active {
-            transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.2);
+            transform: scale(0.96);
         }
 
         @keyframes fadeInScale {
@@ -466,13 +481,15 @@
     </div>
 
     <div class="success-overlay" id="successScreen">
-        <img src="love.png" class="success-icon" alt="love">
-        <div class="success-title">Спасибо за поддержку! ✨</div>
-        <div class="success-message">
-            Ваш платеж успешно завершен.<br><br>
-            Каждая ваша звездочка помогает нам становиться лучше и зажигает новые созвездия в нашей вселенной. Спасибо, что вы с нами! 💜
+        <div class="success-card">
+            <img src="love.png" class="success-icon" alt="love">
+            <div class="success-title">Спасибо за поддержку! ✨</div>
+            <div class="success-message">
+                Ваш платеж успешно завершен.<br><br>
+                Каждая ваша звездочка помогает нам становиться лучше и зажигает новые созвездия в нашей вселенной. Спасибо, что вы с нами! 💜
+            </div>
+            <button class="success-btn" onclick="tg.close()">Вернуться в бота</button>
         </div>
-        <button class="success-btn" onclick="tg.close()">Вернуться в бота</button>
     </div>
 
     <script>
@@ -695,10 +712,8 @@
                 UI.emailError.style.display = 'none';
                 UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
 
-                // Прячем модалку подтверждения
                 closeModal();
 
-                // 1. ПОКАЗЫВАЕМ ЭКРАН ЗАГРУЗКИ (ЛОАДЕР)
                 document.getElementById('loaderScreen').style.display = 'flex';
 
                 tg.sendData(JSON.stringify({
@@ -707,11 +722,8 @@
                     email: email
                 }));
 
-                // 2. ЖДЕМ 5 СЕКУНД И ПОКАЗЫВАЕМ ЭКРАН УСПЕХА
                 setTimeout(() => {
-                    // Прячем лоадер
                     document.getElementById('loaderScreen').style.display = 'none';
-                    // Показываем окно благодарности
                     document.getElementById('successScreen').style.display = 'flex';
                 }, 5000);
 
