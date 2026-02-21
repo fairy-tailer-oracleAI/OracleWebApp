@@ -341,6 +341,20 @@
             updateConversion();
         }
 
+        function hideKeyboard(e) {
+            // Проверяем, что нажатие было именно по фону, а не по инпуту или кнопке
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SELECT') {
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
+            }
+        }
+
+        // Слушаем нажатия на всем документе
+        document.addEventListener('touchstart', hideKeyboard);
+        // Дополнительно для десктопа/кликов
+        document.addEventListener('mousedown', hideKeyboard);
+
         function updateAmount(v, el) {
             document.getElementById('amountInput').value = v;
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
