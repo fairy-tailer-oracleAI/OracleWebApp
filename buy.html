@@ -18,7 +18,6 @@
             --star-glow: rgba(138, 43, 226, 0.6);
         }
 
-        /* Убираем синюю подсветку при тапе на Android/iOS, делаем как нативное приложение */
         * {
             margin: 0;
             padding: 0;
@@ -208,8 +207,9 @@
         .confirm-label { font-size: 10px; color: var(--secondary-text); text-transform: uppercase; }
         .confirm-value { font-size: 15px; color: #fff; font-weight: 600; display: flex; align-items: center; }
 
-        .pay-button { width: 100%; background: var(--accent-color); border: none; border-radius: 16px; padding: 18px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; touch-action: manipulation; }
-        .cancel-btn { background: transparent; color: var(--secondary-text); border: none; margin-top: 12px; width: 100%; font-size: 14px; touch-action: manipulation; }
+        .pay-button { width: 100%; background: var(--accent-color); border: none; border-radius: 16px; padding: 18px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; touch-action: manipulation; transition: transform 0.1s; }
+        .pay-button:active { transform: scale(0.98); }
+        .cancel-btn { background: transparent; color: var(--secondary-text); border: none; margin-top: 12px; width: 100%; font-size: 14px; touch-action: manipulation; padding: 10px; }
 
         .converter-hint { text-align: center; font-size: 13px; color: var(--secondary-text); margin-top: 8px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; }
         #oldStarCount { text-decoration: line-through; margin-right: 3px; opacity: 0.35; display: none; }
@@ -217,6 +217,16 @@
         .presets { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 24px; }
         .preset-btn { flex: 1; background: rgba(255, 255, 255, 0.08); border: none; border-radius: 20px; padding: 10px 0; color: var(--text-color); font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation; }
         .preset-btn.active { background: var(--text-color); color: #000; }
+
+        /* Стили для ошибки */
+        #emailError {
+            color: #ff453a;
+            font-size: 12px;
+            margin-top: 6px;
+            display: none;
+            text-align: center;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -279,6 +289,7 @@
             <div class="confirm-row" id="emailRow">
                 <div class="confirm-label">Ваш email:</div>
                 <input type="email" id="emailInput" placeholder="example@mail.ru" style="width:100%; border-radius:12px; border:1px solid #333; text-align: left; font-size: 16px; padding: 12px; background: rgba(255,255,255,0.05); color: #fff;">
+                <div id="emailError">Введите корректный email (с символом @)</div>
             </div>
 
             <button class="pay-button" style="margin-top: 10px;" onclick="finalPay()">Оплатить</button>
@@ -287,22 +298,20 @@
     </div>
 
     <script>
-        // Инициализация WebApp
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.ready(); // Сообщаем Telegram, что приложение полностью загружено
+        tg.ready();
 
-        // Глобальный обработчик скрытия клавиатуры при тапе мимо инпута
         document.addEventListener('touchstart', (e) => {
-            if (e.target.tagName !== 'INPUT') {
+            const isClickable = e.target.closest('button, .method, .pay-button, .cancel-btn');
+            if (e.target.tagName !== 'INPUT' && !isClickable) {
                 const activeEl = document.activeElement;
                 if (activeEl && activeEl.tagName === 'INPUT') {
-                    activeEl.blur(); // Снимаем фокус, сворачиваем клавиатуру
+                    activeEl.blur();
                 }
             }
         }, { passive: true });
 
-        // Оптимизация: Кешируем DOM-элементы (чтобы не искать их при каждом клике/вводе)
         const UI = {
             amountInput: document.getElementById('amountInput'),
             currencySuffix: document.getElementById('currencySuffix'),
@@ -318,6 +327,7 @@
             modalAmount: document.getElementById('modalAmount'),
             emailRow: document.getElementById('emailRow'),
             emailInput: document.getElementById('emailInput'),
+            emailError: document.getElementById('emailError'), // Кешируем элемент ошибки
             priceList: document.getElementById('priceListContainer'),
             presets: document.getElementById('presetsContainer')
         };
@@ -335,7 +345,6 @@
         let currentMethod = 'card';
         const SERVICES = [{ name: "🔮 Расклад", cost: 50 }, { name: "❤️ Общение", cost: 120 }, { name: "🃏 Доп карта", cost: 350 }];
 
-        // Оптимизация ширины инпута: один постоянный спан вместо постоянного создания/удаления
         const measureSpan = document.createElement('span');
         measureSpan.style.visibility = 'hidden';
         measureSpan.style.position = 'absolute';
@@ -372,8 +381,8 @@
 
         function createPromoSparkle() {
             if (!UI.promoWrapper) return;
-            const b = UI.promoWrapper.getBoundingClientRect(); // Кешировать нет смысла, размер может меняться от клавиатуры
-            if (b.width === 0) return; // Скрыто
+            const b = UI.promoWrapper.getBoundingClientRect();
+            if (b.width === 0) return;
 
             for(let i = 0; i < SPARK_COUNT_PER_TICK; i++) {
                 const spark = document.createElement('div');
@@ -417,7 +426,6 @@
         }
 
         function adjustSuffix() {
-            // Оптимизированное вычисление ширины
             const val = UI.amountInput.value || "0";
             measureSpan.style.font = window.getComputedStyle(UI.amountInput).font;
             measureSpan.innerText = val;
@@ -484,7 +492,16 @@
 
         function closeModal() {
             vibrate();
+
+            // ПРИНУДИТЕЛЬНО снимаем фокус с инпута перед закрытием,
+            // чтобы он не "застревал" в памяти браузера
+            UI.emailInput.blur();
+
             UI.modalOverlay.style.display = 'none';
+
+            // Сбрасываем ошибку, чтобы при следующем открытии всё было чисто
+            UI.emailError.style.display = 'none';
+            UI.emailInput.style.borderColor = '#333';
         }
 
         function finalPay() {
@@ -493,8 +510,17 @@
 
             if (currentMethod === 'card') {
                 email = UI.emailInput.value;
-                if (!email.includes('@')) return alert('Введите корректный email');
+                if (!email.includes('@')) {
+                    // Показываем ошибку ВНУТРИ интерфейса, без системных алертов
+                    UI.emailInput.style.borderColor = '#ff453a';
+                    UI.emailError.style.display = 'block';
+                    return;
+                }
             }
+
+            // Если всё ок, сбрасываем стили ошибки
+            UI.emailError.style.display = 'none';
+            UI.emailInput.style.borderColor = '#333';
 
             tg.sendData(JSON.stringify({
                 amount: UI.amountInput.value,
@@ -507,16 +533,20 @@
             }
         }
 
+        // Скрываем ошибку, как только пользователь начинает исправлять почту
+        UI.emailInput.addEventListener('input', () => {
+            UI.emailError.style.display = 'none';
+            UI.emailInput.style.borderColor = '#333';
+        });
+
         // Рендер пресетов
         UI.presets.innerHTML = [150, 300, 500, 1500].map(v => `
             <button class="preset-btn ${v === 300 ? 'active' : ''}" onclick="updateAmount(${v}, this)">${v}</button>
         `).join('');
 
-        // События
         window.addEventListener('resize', initStars);
         UI.amountInput.addEventListener('input', updateConversion);
 
-        // Инициализация
         initStars();
         updateStars();
         renderPrices();
