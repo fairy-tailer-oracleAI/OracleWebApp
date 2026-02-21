@@ -275,7 +275,7 @@
             line-height: 1.4;
         }
 
-        /* === НОВЫЕ СТИЛИ ЭКРАНА УСПЕХА === */
+        /* === СТИЛИ ЭКРАНА УСПЕХА === */
         .success-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -290,21 +290,28 @@
             padding: 20px;
         }
 
+        /* Добавлена обертка для искр */
+        .success-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 360px;
+        }
+
         .success-card {
             background: rgba(255, 255, 255, 0.05); /* Лунная полупрозрачность */
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            width: 100%;
-            max-width: 360px;
             border-radius: 28px;
             padding: 40px 24px;
-            border: 1px solid rgba(255, 255, 255, 0.2); /* Светлая рамка */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Светлая рамка, без свечения */
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
             animation: fadeInScale 0.5s ease-out forwards;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 25px rgba(255, 255, 255, 0.1); /* Лунное свечение внутри */
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); /* Только внешняя тень для объема */
+            position: relative;
+            z-index: 2;
         }
 
         .success-icon {
@@ -313,7 +320,7 @@
             object-fit: contain;
             margin-bottom: 20px;
             filter: drop-shadow(0 0 15px rgba(255, 102, 102, 0.3)); /* Мягкое светло-красное свечение */
-            animation: pulseLove 4s infinite ease-in-out; /* Замедлил до 4 секунд */
+            animation: pulseLove 4s infinite ease-in-out; /* Замедлено до 4 секунд */
         }
 
         .success-title {
@@ -359,7 +366,7 @@
 
         @keyframes pulseLove {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.04); filter: drop-shadow(0 0 20px rgba(255, 102, 102, 0.5)); } /* Более плавное увеличение */
+            50% { transform: scale(1.04); filter: drop-shadow(0 0 20px rgba(255, 102, 102, 0.5)); }
         }
     </style>
 </head>
@@ -481,14 +488,16 @@
     </div>
 
     <div class="success-overlay" id="successScreen">
-        <div class="success-card">
-            <img src="love.png" class="success-icon" alt="love">
-            <div class="success-title">Спасибо <br> за поддержку!</div>
-            <div class="success-message">
-                Ваш платеж успешно завершен.<br><br>
-                Каждая ваша звездочка помогает нам становиться лучше и зажигает новые созвездия в нашей вселенной. <br>Спасибо, что вы с нами! 💜
+        <div class="success-wrapper" id="successWrapper">
+            <div class="success-card">
+                <img src="love.png" class="success-icon" alt="love">
+                <div class="success-title">Спасибо <br> за поддержку!</div>
+                <div class="success-message">
+                    Ваш платеж успешно завершен.<br><br>
+                    Каждая ваша звездочка помогает нам становиться лучше и зажигает новые созвездия в нашей вселенной. <br>Спасибо, что вы с нами! 💜
+                </div>
+                <button class="success-btn" onclick="tg.close()">Вернуться в бота</button>
             </div>
-            <button class="success-btn" onclick="tg.close()">Вернуться в бота</button>
         </div>
     </div>
 
@@ -526,7 +535,9 @@
             emailInput: document.getElementById('emailInput'),
             emailError: document.getElementById('emailError'),
             priceList: document.getElementById('priceListContainer'),
-            presets: document.getElementById('presetsContainer')
+            presets: document.getElementById('presetsContainer'),
+            successWrapper: document.getElementById('successWrapper'), // Добавлено для искр
+            successScreen: document.getElementById('successScreen') // Добавлено для проверки видимости
         };
 
         const SPARK_COUNT_PER_TICK = 6;
@@ -576,9 +587,10 @@
             requestAnimationFrame(updateStars);
         }
 
-        function createPromoSparkle() {
-            if (!UI.promoWrapper) return;
-            const b = UI.promoWrapper.getBoundingClientRect();
+        // УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ДЛЯ ИСКР
+        function createSparklesForElement(element) {
+            if (!element) return;
+            const b = element.getBoundingClientRect();
             if (b.width === 0) return;
 
             for(let i = 0; i < SPARK_COUNT_PER_TICK; i++) {
@@ -601,7 +613,7 @@
                 const duration = SPARK_LIFETIME * (0.6 + Math.random() * 0.4);
                 spark.style.animation = `sparkleOut ${duration}s forwards ease-out`;
 
-                UI.promoWrapper.appendChild(spark);
+                element.appendChild(spark);
                 setTimeout(() => spark.remove(), duration * 1000);
             }
         }
@@ -618,7 +630,12 @@
             }, 1000);
 
             setInterval(() => {
-                if (timeLeft > 0) createPromoSparkle();
+                if (timeLeft > 0) createSparklesForElement(UI.promoWrapper);
+
+                // Если экран успеха виден, тоже пускаем искры от него
+                if (UI.successScreen.style.display === 'flex') {
+                    createSparklesForElement(UI.successWrapper);
+                }
             }, 150);
         }
 
@@ -724,7 +741,7 @@
 
                 setTimeout(() => {
                     document.getElementById('loaderScreen').style.display = 'none';
-                    document.getElementById('successScreen').style.display = 'flex';
+                    UI.successScreen.style.display = 'flex'; // Показываем окно успеха
                 }, 5000);
 
             } else if (currentMethod === 'stars') {
