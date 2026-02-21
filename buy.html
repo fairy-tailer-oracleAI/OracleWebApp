@@ -139,11 +139,35 @@
         .method.active { border-color: var(--accent-color); background: rgba(0, 122, 255, 0.15); }
 
         /* --- МИНИМАЛИСТИЧНОЕ СТЕКЛО --- */
-        .promo-wrapper { position: relative; margin-bottom: 24px; padding: 2px; }
+        .promo-wrapper {
+            position: relative;
+            margin-bottom: 24px;
+            padding: 2px;
+        }
+
         .promo-banner {
-            position: relative; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(157, 80, 187, 0.3); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-            border-radius: 14px; padding: 12px; text-align: center; overflow: visible;
+            position: relative;
+            /* Прозрачный фон с легким холодным оттенком */
+            background: rgba(224, 242, 255, 0.05);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+
+            /* Лунно-белая рамка с прозрачностью */
+            border: 0.1px solid rgba(255, 255, 255, 0.4);
+
+            /* Многослойное лунное свечение */
+            box-shadow:
+                0 8px 32px 0 rgba(0, 0, 0, 0.8),          /* Тень для объема */
+                0 0 10px 0 rgba(224, 242, 255, 0.2),      /* Внешний мягкий ореол */
+                inset 0 0 12px 0 rgba(255, 255, 255, 0.1); /* Внутренний свет */
+
+            border-radius: 14px;
+            padding: 12px;
+            text-align: center;
+            overflow: visible;
+
+            /* Дополнительный блеск на гранях */
+            background-clip: padding-box;
         }
         .promo-text {
             font-size: 13px;
@@ -166,22 +190,25 @@
             font-family: 'Courier New', monospace;
             font-size: 18px;
             font-weight: 900;
-
-            /* Цвет холодного лунного света */
             color: #f0faff;
-
-            /* Многослойное свечение: плотный белый + широкий голубоватый туман */
             text-shadow:
                 0 0 8px rgba(255, 255, 255, 0.8),
                 0 0 15px rgba(138, 180, 248, 0.5),
                 0 0 25px rgba(255, 255, 255, 0.2);
-
-            animation: fomo-pulse 0.8s infinite alternate;
             letter-spacing: 2px;
             display: inline-block;
+            /* Плавный возврат в исходное состояние */
+            transition: transform 0.2s ease-out, text-shadow 0.2s ease-out;
+            will-change: transform;
         }
 
-        @keyframes fomo-pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+        /* Класс, который будет "вспыхивать" каждую секунду */
+        .timer-beat {
+            transform: scale(1.15); /* Резкий рывок вперед */
+            text-shadow:
+                0 0 15px rgba(255, 255, 255, 1),
+                0 0 30px rgba(138, 180, 248, 0.8);
+        }
 
         .promo-spark {
             position: absolute;
