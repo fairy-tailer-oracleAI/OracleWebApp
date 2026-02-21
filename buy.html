@@ -194,14 +194,107 @@
         .preset-btn { flex: 1; background: rgba(255, 255, 255, 0.08); border: none; border-radius: 20px; padding: 10px 0; color: var(--text-color); font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation; }
         .preset-btn.active { background: var(--text-color); color: #000; }
 
-        /* ДОБАВИЛ СТИЛЬ ОШИБКИ: скрыт по умолчанию */
         #emailError {
             color: #ff453a;
             font-size: 12px;
             margin-top: 6px;
-            display: none; /* Скрыто */
+            display: none;
             text-align: center;
             font-weight: 500;
+        }
+
+        /* === СТИЛИ НОВОГО ЛОАДЕРА === */
+        .loader-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(5, 5, 7, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .loader {
+            --fill-color: var(--cosmic-secondary); /* Использовал твой фиолетовый из космо-темы */
+            --shine-color: rgba(157, 80, 187, 0.4);
+            transform: scale(0.6); /* Чуть увеличил для красоты */
+            width: 100px;
+            height: 100px; /* Зафиксировал высоту, чтобы не наезжало на текст */
+            margin-bottom: 40px;
+            position: relative;
+            filter: drop-shadow(0 0 10px var(--shine-color));
+        }
+
+        .loader #pegtopone {
+            position: absolute;
+            animation: flowe-one 1.5s linear infinite;
+        }
+
+        .loader #pegtoptwo {
+            position: absolute;
+            opacity: 0;
+            transform: scale(0) translateY(-200px) translateX(-100px);
+            animation: flowe-two 1.5s linear infinite;
+            animation-delay: 0.5s;
+        }
+
+        .loader #pegtopthree {
+            position: absolute;
+            opacity: 0;
+            transform: scale(0) translateY(-200px) translateX(100px);
+            animation: flowe-three 1.5s linear infinite;
+            animation-delay: 1s;
+        }
+
+        .loader svg g path:first-child {
+            fill: var(--fill-color);
+        }
+
+        @keyframes flowe-one {
+            0% { transform: scale(0.5) translateY(-200px); opacity: 0; }
+            25% { transform: scale(0.75) translateY(-100px); opacity: 1; }
+            50% { transform: scale(1) translateY(0px); opacity: 1; }
+            75% { transform: scale(0.5) translateY(50px); opacity: 1; }
+            100% { transform: scale(0) translateY(100px); opacity: 0; }
+        }
+
+        @keyframes flowe-two {
+            0% { transform: scale(0.5) rotateZ(-10deg) translateY(-200px) translateX(-100px); opacity: 0; }
+            25% { transform: scale(1) rotateZ(-5deg) translateY(-100px) translateX(-50px); opacity: 1; }
+            50% { transform: scale(1) rotateZ(0deg) translateY(0px) translateX(-25px); opacity: 1; }
+            75% { transform: scale(0.5) rotateZ(5deg) translateY(50px) translateX(0px); opacity: 1; }
+            100% { transform: scale(0) rotateZ(10deg) translateY(100px) translateX(25px); opacity: 0; }
+        }
+
+        @keyframes flowe-three {
+            0% { transform: scale(0.5) rotateZ(10deg) translateY(-200px) translateX(100px); opacity: 0; }
+            25% { transform: scale(1) rotateZ(5deg) translateY(-100px) translateX(50px); opacity: 1; }
+            50% { transform: scale(1) rotateZ(0deg) translateY(0px) translateX(25px); opacity: 1; }
+            75% { transform: scale(0.5) rotateZ(-5deg) translateY(50px) translateX(0px); opacity: 1; }
+            100% { transform: scale(0) rotateZ(-10deg) translateY(100px) translateX(-25px); opacity: 0; }
+        }
+
+        .loader-text {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #e0f2ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+        }
+
+        .loader-subtext {
+            font-size: 14px;
+            color: var(--secondary-text);
+            text-align: center;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -273,20 +366,65 @@
         </div>
     </div>
 
+    <div class="loader-overlay" id="loaderScreen">
+        <div class="loader">
+            <svg id="pegtopone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <defs>
+                    <filter id="shine-1"><feGaussianBlur stdDeviation="3"></feGaussianBlur></filter>
+                    <mask id="mask-1"><path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="white"></path></mask>
+                    <radialGradient id="grad-1" cx="50" cy="66" fx="50" fy="66" r="30" gradientTransform="translate(0 35) scale(1 0.5)" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="black" stop-opacity="0.3"></stop><stop offset="50%" stop-color="black" stop-opacity="0.1"></stop><stop offset="100%" stop-color="black" stop-opacity="0"></stop></radialGradient>
+                    <radialGradient id="grad-2" cx="55" cy="20" fx="55" fy="20" r="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="white" stop-opacity="0.3"></stop><stop offset="50%" stop-color="white" stop-opacity="0.1"></stop><stop offset="100%" stop-color="white" stop-opacity="0"></stop></radialGradient>
+                    <radialGradient id="grad-3" cx="85" cy="50" fx="85" fy="50" xlink:href="#grad-2"></radialGradient>
+                    <radialGradient id="grad-4" cx="50" cy="58" fx="50" fy="58" r="60" gradientTransform="translate(0 47) scale(1 0.2)" xlink:href="#grad-3"></radialGradient>
+                    <linearGradient id="grad-5" x1="50" y1="90" x2="50" y2="10" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="black" stop-opacity="0.2"></stop><stop offset="40%" stop-color="black" stop-opacity="0"></stop></linearGradient>
+                </defs>
+                <g>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="currentColor"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-1)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="none" stroke="white" opacity="0.3" stroke-width="3" filter="url(#shine-1)" mask="url(#mask-1)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-2)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-3)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-4)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-5)"></path>
+                </g>
+            </svg>
+            <svg id="pegtoptwo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <g>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="currentColor"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-1)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="none" stroke="white" opacity="0.3" stroke-width="3" filter="url(#shine-1)" mask="url(#mask-1)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-2)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-3)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-4)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-5)"></path>
+                </g>
+            </svg>
+            <svg id="pegtopthree" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <g>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="currentColor"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-1)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="none" stroke="white" opacity="0.3" stroke-width="3" filter="url(#shine-1)" mask="url(#mask-1)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-2)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-3)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-4)"></path>
+                    <path d="M63,37c-6.7-4-4-27-13-27s-6.3,23-13,27-27,4-27,13,20.3,9,27,13,4,27,13,27,6.3-23,13-27,27-4,27-13-20.3-9-27-13Z" fill="url(#grad-5)"></path>
+                </g>
+            </svg>
+        </div>
+        <div class="loader-text">Платёж в обработке</div>
+        <div class="loader-subtext">Пожалуйста, не закрывайте окно</div>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
 
-        // ФИКС 1: Логика скрытия клавиатуры
         document.addEventListener('touchstart', (e) => {
-            // Если мы жмем на кнопку, ВООБЩЕ НИЧЕГО НЕ ДЕЛАЕМ в этом событии.
-            // Пусть сработает нормальный click.
             if (e.target.closest('button, .method, .pay-button, .cancel-btn')) {
                 return;
             }
 
-            // Только если нажали в пустое место (не в инпут и не в кнопку) — скрываем клаву
             if (e.target.tagName !== 'INPUT') {
                 const activeEl = document.activeElement;
                 if (activeEl && activeEl.tagName === 'INPUT') {
@@ -475,53 +613,63 @@
 
         function closeModal() {
             vibrate();
-            UI.emailInput.blur(); // Скрываем клаву
+            UI.emailInput.blur();
             UI.modalOverlay.style.display = 'none';
-            // Сброс ошибки
             UI.emailError.style.display = 'none';
             UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
         }
 
-        // ФИКС 2: Функция оплаты
         function finalPay() {
             vibrate();
             let email = '';
 
-            // Сначала СКРЫВАЕМ КЛАВИАТУРУ, чтобы не было глюков верстки
             UI.emailInput.blur();
 
             if (currentMethod === 'card') {
                 email = UI.emailInput.value;
                 if (!email.includes('@')) {
-                    // Показываем ошибку ВНУТРИ формы (без алертов)
                     UI.emailInput.style.borderColor = '#ff453a';
                     UI.emailError.style.display = 'block';
                     return;
                 }
-            }
 
-            // Если все ок
-            UI.emailError.style.display = 'none';
-            UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
+                UI.emailError.style.display = 'none';
+                UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
 
-            tg.sendData(JSON.stringify({
-                amount: UI.amountInput.value,
-                method: currentMethod,
-                email: email
-            }));
+                // Прячем модалку
+                closeModal();
 
-            if (currentMethod === 'stars') {
+                // Запускаем твой новый крутой лоадер
+                document.getElementById('loaderScreen').style.display = 'flex';
+
+                tg.sendData(JSON.stringify({
+                    amount: UI.amountInput.value,
+                    method: currentMethod,
+                    email: email
+                }));
+
+                // Имитация задержки перед редиректом (2 сек)
+                setTimeout(() => {
+                    // window.location.href = "https://твоя-касса.ru/pay...";
+                }, 2000);
+
+            } else if (currentMethod === 'stars') {
+                UI.emailError.style.display = 'none';
+
+                tg.sendData(JSON.stringify({
+                    amount: UI.amountInput.value,
+                    method: currentMethod,
+                    email: ''
+                }));
                 tg.close();
             }
         }
 
-        // При вводе убираем ошибку
         UI.emailInput.addEventListener('input', () => {
             UI.emailError.style.display = 'none';
             UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
         });
 
-        // Рендер пресетов
         UI.presets.innerHTML = [150, 300, 500, 1500].map(v => `
             <button class="preset-btn ${v === 300 ? 'active' : ''}" onclick="updateAmount(${v}, this)">${v}</button>
         `).join('');
