@@ -15,6 +15,7 @@
             --secondary-text: #8e8e93;
             --cosmic-primary: #00d2ff;
             --cosmic-secondary: #9d50bb;
+            --star-glow: rgba(138, 43, 226, 0.6);
         }
 
         * {
@@ -193,13 +194,12 @@
         .preset-btn { flex: 1; background: rgba(255, 255, 255, 0.08); border: none; border-radius: 20px; padding: 10px 0; color: var(--text-color); font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation; }
         .preset-btn.active { background: var(--text-color); color: #000; }
 
-        /* ОПТИМИЗАЦИЯ ОШИБКИ: Место под ошибку зарезервировано всегда, чтобы модалка не "прыгала" в размерах */
+        /* ДОБАВИЛ СТИЛЬ ОШИБКИ: скрыт по умолчанию */
         #emailError {
             color: #ff453a;
             font-size: 12px;
             margin-top: 6px;
-            min-height: 15px; /* Зафиксировали высоту */
-            visibility: hidden; /* Скрываем без удаления из макета */
+            display: none; /* Скрыто */
             text-align: center;
             font-weight: 500;
         }
@@ -278,7 +278,22 @@
         tg.expand();
         tg.ready();
 
-        // УДАЛИЛ глобальный хак touchstart — именно он "ломал" фокус и блокировал повторные нажатия кнопок на смартфонах.
+        // ФИКС 1: Логика скрытия клавиатуры
+        document.addEventListener('touchstart', (e) => {
+            // Если мы жмем на кнопку, ВООБЩЕ НИЧЕГО НЕ ДЕЛАЕМ в этом событии.
+            // Пусть сработает нормальный click.
+            if (e.target.closest('button, .method, .pay-button, .cancel-btn')) {
+                return;
+            }
+
+            // Только если нажали в пустое место (не в инпут и не в кнопку) — скрываем клаву
+            if (e.target.tagName !== 'INPUT') {
+                const activeEl = document.activeElement;
+                if (activeEl && activeEl.tagName === 'INPUT') {
+                    activeEl.blur();
+                }
+            }
+        }, { passive: true });
 
         const UI = {
             amountInput: document.getElementById('amountInput'),
@@ -300,10 +315,9 @@
             presets: document.getElementById('presetsContainer')
         };
 
-        // ОПТИМИЗАЦИЯ производительности: Уменьшили частоту и количество частиц
-        const SPARK_COUNT_PER_TICK = 2;
-        const SPARK_SPEED = 15;
-        const SPARK_LIFETIME = 1.5;
+        const SPARK_COUNT_PER_TICK = 6;
+        const SPARK_SPEED = 20;
+        const SPARK_LIFETIME = 2.5;
         const STAR_ICON_HTML = '<img src="starxd.png" class="star-icon" alt="star">';
         const SUFFIX_STAR_HTML = '<img src="star.png" alt="star" class="suffix-icon-no-glow">';
 
@@ -330,9 +344,7 @@
             width = window.innerWidth; height = window.innerHeight;
             canvas.width = width; canvas.height = height;
             stars = [];
-            // ОПТИМИЗАЦИЯ: на мобильных устройствах достаточно 200 частиц вместо 800
-            const numStars = width < 600 ? 200 : 400;
-            for (let i = 0; i < numStars; i++) {
+            for (let i = 0; i < 800; i++) {
                 stars.push({ x: Math.random() * width - width/2, y: Math.random() * height - height/2, z: Math.random() * width });
             }
         }
@@ -351,7 +363,7 @@
         }
 
         function createPromoSparkle() {
-            if (!UI.promoWrapper || document.hidden) return; // Не рендерим, если приложение свернуто
+            if (!UI.promoWrapper) return;
             const b = UI.promoWrapper.getBoundingClientRect();
             if (b.width === 0) return;
 
@@ -393,7 +405,7 @@
 
             setInterval(() => {
                 if (timeLeft > 0) createPromoSparkle();
-            }, 350); // ОПТИМИЗАЦИЯ: увеличили интервал между искрами с 150мс до 350мс
+            }, 150);
         }
 
         function adjustSuffix() {
@@ -463,37 +475,33 @@
 
         function closeModal() {
             vibrate();
-
-            // Принудительно гасим клавиатуру, чтобы она не сдвигала фокус при скрытии модалки
-            UI.emailInput.blur();
-
+            UI.emailInput.blur(); // Скрываем клаву
             UI.modalOverlay.style.display = 'none';
-
-            // Очищаем ошибку для следующего раза
-            UI.emailError.style.visibility = 'hidden';
+            // Сброс ошибки
+            UI.emailError.style.display = 'none';
             UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
         }
 
+        // ФИКС 2: Функция оплаты
         function finalPay() {
             vibrate();
             let email = '';
 
-            // При попытке оплаты сразу прячем клавиатуру (снимаем фокус)
-            // Это гарантирует, что следующий тап по экрану сработает сразу на кнопку
+            // Сначала СКРЫВАЕМ КЛАВИАТУРУ, чтобы не было глюков верстки
             UI.emailInput.blur();
 
             if (currentMethod === 'card') {
                 email = UI.emailInput.value;
                 if (!email.includes('@')) {
-                    // Подсвечиваем красным
+                    // Показываем ошибку ВНУТРИ формы (без алертов)
                     UI.emailInput.style.borderColor = '#ff453a';
-                    UI.emailError.style.visibility = 'visible';
+                    UI.emailError.style.display = 'block';
                     return;
                 }
             }
 
-            // Если всё окей — сбрасываем стиль ошибки
-            UI.emailError.style.visibility = 'hidden';
+            // Если все ок
+            UI.emailError.style.display = 'none';
             UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
 
             tg.sendData(JSON.stringify({
@@ -507,9 +515,9 @@
             }
         }
 
-        // Прячем ошибку, если пользователь начал вводить заново
+        // При вводе убираем ошибку
         UI.emailInput.addEventListener('input', () => {
-            UI.emailError.style.visibility = 'hidden';
+            UI.emailError.style.display = 'none';
             UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
         });
 
