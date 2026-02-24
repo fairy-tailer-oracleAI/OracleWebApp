@@ -728,32 +728,68 @@
 
                 UI.emailError.style.display = 'none';
                 UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
-
-                closeModal();
-
-                document.getElementById('loaderScreen').style.display = 'flex';
-
-                tg.sendData(JSON.stringify({
-                    amount: UI.amountInput.value,
-                    method: currentMethod,
-                    email: email
-                }));
-
-                setTimeout(() => {
-                    document.getElementById('loaderScreen').style.display = 'none';
-                    UI.successScreen.style.display = 'flex'; // Показываем окно успеха
-                }, 5000);
-
-            } else if (currentMethod === 'stars') {
-                UI.emailError.style.display = 'none';
-
-                tg.sendData(JSON.stringify({
-                    amount: UI.amountInput.value,
-                    method: currentMethod,
-                    email: ''
-                }));
-                tg.close();
             }
+
+            closeModal();
+
+            // Показываем лоадер
+            document.getElementById('loaderScreen').style.display = 'flex';
+
+            // Формируем данные
+            const payload = {
+                initData: tg.initData,
+                amount: UI.amountInput.value,
+                method: currentMethod,
+                email: email,
+                // Важно: берем текст, удаляем пробелы
+                starsCount: document.getElementById('starCount').innerText.replace(/\s/g, '')
+            };
+
+            // Отправляем запрос на сервер
+            fetch('/webapp-payment/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Скрываем лоадер, ответ получен
+                document.getElementById('loaderScreen').style.display = 'none';
+
+                if (data.status === 'ok') {
+                    if (currentMethod === 'stars') {
+                        // Если это Telegram Stars — закрываем WebApp, счет придет в чат
+                        tg.close();
+                    } 
+                    else if (currentMethod === 'card') {
+                        // Если это карта — проверяем, пришла ли ссылка
+                        if (data.url) {
+                            // Открываем ссылку на ЮКассу
+                            tg.openLink(data.url);
+                            
+                            // (Опционально) Показываем успех, чтобы когда юзер вернулся, было красиво
+                            // Но можно и закрыть окно: tg.close();
+                            UI.successScreen.style.display = 'flex';
+                        } else {
+                            tg.showAlert("Ошибка: Сервер не вернул ссылку на оплату.");
+                        }
+                    }
+                } else {
+                    tg.showAlert("Ошибка создания платежа: " + (data.message || "Неизвестная ошибка"));
+                }
+            })
+            .catch(err => {
+                document.getElementById('loaderScreen').style.display = 'none';
+                // Показываем реальный текст ошибки для отладки
+                tg.showAlert("Ошибка соединения: " + err.message);
+            });
         }
 
         UI.emailInput.addEventListener('input', () => {
