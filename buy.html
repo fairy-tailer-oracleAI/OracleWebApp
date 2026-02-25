@@ -744,7 +744,8 @@
             vibrate();
             const starCount = UI.starCount.textContent;
             UI.modalMethod.textContent = currentMethod === 'card' ? 'Карта / СБП' : 'Telegram Stars';
-            UI.modalStarsSpan.parentElement.innerHTML = `<span id="modalStars">${starCount}</span> ${STAR_ICON_HTML}`;
+            
+            UI.modalStarsSpan.textContent = starCount; 
 
             if (currentMethod === 'stars') {
                 UI.modalAmount.innerHTML = `${UI.amountInput.value} <img src="star.png" class="suffix-icon-no-glow" alt="star">`;
