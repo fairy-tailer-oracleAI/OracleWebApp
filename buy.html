@@ -506,6 +506,24 @@
         tg.expand();
         tg.ready();
 
+        const userId = tg.initDataUnsafe?.user?.id;
+
+        if (userId) {
+            fetch(`/user-fomo-status/?user_id=${userId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'ok' && data.bonus_available && data.time_left > 0) {
+                        timeLeft = data.time_left;
+                        startTimer();
+                        UI.promoWrapper.style.display = 'block';
+                    } else {
+                        timeLeft = 0;
+                        UI.promoWrapper.style.display = 'none';
+                        updateConversion();
+                    }
+                });
+        }
+        
         document.addEventListener('touchstart', (e) => {
             if (e.target.closest('button, .method, .pay-button, .cancel-btn')) {
                 return;
