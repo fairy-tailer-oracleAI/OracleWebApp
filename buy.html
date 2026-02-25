@@ -401,7 +401,7 @@
 
         <div id="presetsContainer" class="presets"></div>
 
-        <div class="promo-wrapper" id="promoWrapper">
+        <div class="promo-wrapper" id="promoWrapper" style="display: none;">
             <div class="promo-banner" id="promoBanner">
                 <span class="promo-text">✨ Бонус на первый депозит 120%!</span>
                 <div class="promo-timer" id="timer">10:00</div>
@@ -513,15 +513,15 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.status === 'ok' && data.bonus_available && data.time_left > 0) {
-                        timeLeft = data.time_left;
-                        startTimer();
-                        UI.promoWrapper.style.display = 'block';
+                        UI.promoWrapper.style.display = 'block'; // Показываем баннер
+                        startRobustTimer(data.time_left); // Запускаем точный таймер
                     } else {
                         timeLeft = 0;
                         UI.promoWrapper.style.display = 'none';
-                        updateConversion();
+                        updateConversion(); 
                     }
-                });
+                })
+                .catch(err => console.error("Ошибка загрузки FOMO:", err));
         }
         
         document.addEventListener('touchstart', (e) => {
@@ -572,6 +572,8 @@
         let STARS_TO_POINTS = 1.0;
         let RUB_TO_POINTS = 0.5;
         const SERVICES = [{ name: "🔮 Расклад", cost: 50 }, { name: "❤️ Общение", cost: 120 }, { name: "🃏 Доп карта", cost: 350 }];
+        let timerInterval = null;
+        let sparksInterval = null;
 
         fetch('/payment-settings/')
             .then(r => r.json())
@@ -647,27 +649,48 @@
             }
         }
 
-        function startTimer() {
-            const timerInterval = setInterval(() => {
+        function startRobustTimer(secondsFromServer) {
+            // 1. Очищаем старые интервалы, чтобы предотвратить дублирование (перескоки)
+            if (timerInterval) clearInterval(timerInterval);
+            if (sparksInterval) clearInterval(sparksInterval);
+        
+            // 2. Запоминаем ТОЧНОЕ время окончания по часам устройства (в миллисекундах)
+            const endTime = Date.now() + (secondsFromServer * 1000);
+        
+            function tick() {
+                const now = Date.now();
+                // Считаем реальную разницу во времени
+                timeLeft = Math.round((endTime - now) / 1000);
+        
                 if (timeLeft <= 0) {
+                    timeLeft = 0;
                     clearInterval(timerInterval);
+                    clearInterval(sparksInterval);
+                    UI.promoWrapper.style.display = 'none'; // Прячем баннер
+                    updateConversion(); // Пересчитываем баланс без бонуса
                     return;
                 }
-                timeLeft--;
-                let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+        
+                // Обновляем текст
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
                 UI.timer.textContent = `${m}:${s < 10 ? '0' + s : s}`;
-            }, 1000);
-
-            setInterval(() => {
-                if (timeLeft > 0) createSparklesForElement(UI.promoWrapper);
-
-                // Если экран успеха виден, тоже пускаем искры от него
+            }
+        
+            tick(); // Вызываем сразу 1 раз, чтобы не ждать первую секунду
+            timerInterval = setInterval(tick, 1000);
+        
+            // 3. Отдельный независимый интервал для визуальных эффектов (искр)
+            sparksInterval = setInterval(() => {
+                if (timeLeft > 0 && UI.promoWrapper.style.display !== 'none') {
+                    createSparklesForElement(UI.promoWrapper);
+                }
                 if (UI.successScreen.style.display === 'flex') {
                     createSparklesForElement(UI.successWrapper);
                 }
             }, 150);
         }
-
+        
         function adjustSuffix() {
             const val = UI.amountInput.value || "0";
             measureSpan.style.font = window.getComputedStyle(UI.amountInput).font;
@@ -837,7 +860,6 @@
         updateStars();
         renderPrices();
         updateConversion();
-        startTimer();
     </script>
 </body>
 </html>
