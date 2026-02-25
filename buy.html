@@ -551,8 +551,19 @@
         let width, height, stars = [];
         let timeLeft = 600;
         let currentMethod = 'card';
+        let STARS_TO_POINTS = 1.0;
+        let RUB_TO_POINTS = 0.5;
         const SERVICES = [{ name: "🔮 Расклад", cost: 50 }, { name: "❤️ Общение", cost: 120 }, { name: "🃏 Доп карта", cost: 350 }];
 
+        fetch('/payment-settings/')
+            .then(r => r.json())
+            .then(data => {
+                STARS_TO_POINTS = data.stars_to_points;
+                RUB_TO_POINTS = data.rub_to_points;
+                updateConversion(); // обновляем отображение
+            })
+            .catch(err => console.error('Не удалось загрузить курсы:', err));
+        
         const measureSpan = document.createElement('span');
         measureSpan.style.visibility = 'hidden';
         measureSpan.style.position = 'absolute';
@@ -656,7 +667,7 @@
 
         function updateConversion() {
             const val = parseFloat(UI.amountInput.value) || 0;
-            const base = Math.floor(val * (currentMethod === 'card' ? 0.5 : 1.0));
+            const base = Math.floor(val * (currentMethod === 'card' ? RUB_TO_POINTS : STARS_TO_POINTS));
             const mult = (val >= 300 && timeLeft > 0) ? 1.2 : 1.0;
             const final = Math.floor(base * mult);
 
