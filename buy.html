@@ -401,7 +401,7 @@
 
         <div id="presetsContainer" class="presets"></div>
 
-        <div class="promo-wrapper" id="promoWrapper">
+        <div class="promo-wrapper" id="promoWrapper" style="display: none;">
             <div class="promo-banner" id="promoBanner">
                 <span class="promo-text">✨ Бонус на первый депозит 120%!</span>
                 <div class="promo-timer" id="timer">10:00</div>
@@ -506,6 +506,24 @@
         tg.expand();
         tg.ready();
 
+        const userId = tg.initDataUnsafe?.user?.id;
+
+        if (userId) {
+            fetch(`/user-fomo-status/?user_id=${userId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'ok' && data.bonus_available && data.time_left > 0) {
+                        UI.promoWrapper.style.display = 'block'; // Показываем баннер
+                        startRobustTimer(data.time_left); // Запускаем точный таймер
+                    } else {
+                        timeLeft = 0;
+                        UI.promoWrapper.style.display = 'none';
+                        updateConversion(); 
+                    }
+                })
+                .catch(err => console.error("Ошибка загрузки FOMO:", err));
+        }
+        
         document.addEventListener('touchstart', (e) => {
             if (e.target.closest('button, .method, .pay-button, .cancel-btn')) {
                 return;
@@ -551,8 +569,21 @@
         let width, height, stars = [];
         let timeLeft = 600;
         let currentMethod = 'card';
+        let STARS_TO_POINTS = 1.0;
+        let RUB_TO_POINTS = 0.5;
         const SERVICES = [{ name: "🔮 Расклад", cost: 50 }, { name: "❤️ Общение", cost: 120 }, { name: "🃏 Доп карта", cost: 350 }];
+        let timerInterval = null;
+        let sparksInterval = null;
 
+        fetch('/payment-settings/')
+            .then(r => r.json())
+            .then(data => {
+                STARS_TO_POINTS = data.stars_to_points;
+                RUB_TO_POINTS = data.rub_to_points;
+                updateConversion(); // обновляем отображение
+            })
+            .catch(err => console.error('Не удалось загрузить курсы:', err));
+        
         const measureSpan = document.createElement('span');
         measureSpan.style.visibility = 'hidden';
         measureSpan.style.position = 'absolute';
@@ -618,27 +649,48 @@
             }
         }
 
-        function startTimer() {
-            const timerInterval = setInterval(() => {
+        function startRobustTimer(secondsFromServer) {
+            // 1. Очищаем старые интервалы, чтобы предотвратить дублирование (перескоки)
+            if (timerInterval) clearInterval(timerInterval);
+            if (sparksInterval) clearInterval(sparksInterval);
+        
+            // 2. Запоминаем ТОЧНОЕ время окончания по часам устройства (в миллисекундах)
+            const endTime = Date.now() + (secondsFromServer * 1000);
+        
+            function tick() {
+                const now = Date.now();
+                // Считаем реальную разницу во времени
+                timeLeft = Math.round((endTime - now) / 1000);
+        
                 if (timeLeft <= 0) {
+                    timeLeft = 0;
                     clearInterval(timerInterval);
+                    clearInterval(sparksInterval);
+                    UI.promoWrapper.style.display = 'none'; // Прячем баннер
+                    updateConversion(); // Пересчитываем баланс без бонуса
                     return;
                 }
-                timeLeft--;
-                let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+        
+                // Обновляем текст
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
                 UI.timer.textContent = `${m}:${s < 10 ? '0' + s : s}`;
-            }, 1000);
-
-            setInterval(() => {
-                if (timeLeft > 0) createSparklesForElement(UI.promoWrapper);
-
-                // Если экран успеха виден, тоже пускаем искры от него
+            }
+        
+            tick(); // Вызываем сразу 1 раз, чтобы не ждать первую секунду
+            timerInterval = setInterval(tick, 1000);
+        
+            // 3. Отдельный независимый интервал для визуальных эффектов (искр)
+            sparksInterval = setInterval(() => {
+                if (timeLeft > 0 && UI.promoWrapper.style.display !== 'none') {
+                    createSparklesForElement(UI.promoWrapper);
+                }
                 if (UI.successScreen.style.display === 'flex') {
                     createSparklesForElement(UI.successWrapper);
                 }
             }, 150);
         }
-
+        
         function adjustSuffix() {
             const val = UI.amountInput.value || "0";
             measureSpan.style.font = window.getComputedStyle(UI.amountInput).font;
@@ -656,7 +708,7 @@
 
         function updateConversion() {
             const val = parseFloat(UI.amountInput.value) || 0;
-            const base = Math.floor(val * (currentMethod === 'card' ? 0.5 : 1.0));
+            const base = Math.floor(val * (currentMethod === 'card' ? RUB_TO_POINTS : STARS_TO_POINTS));
             const mult = (val >= 300 && timeLeft > 0) ? 1.2 : 1.0;
             const final = Math.floor(base * mult);
 
@@ -692,7 +744,8 @@
             vibrate();
             const starCount = UI.starCount.textContent;
             UI.modalMethod.textContent = currentMethod === 'card' ? 'Карта / СБП' : 'Telegram Stars';
-            UI.modalStarsSpan.parentElement.innerHTML = `<span id="modalStars">${starCount}</span> ${STAR_ICON_HTML}`;
+            
+            UI.modalStarsSpan.textContent = starCount; 
 
             if (currentMethod === 'stars') {
                 UI.modalAmount.innerHTML = `${UI.amountInput.value} <img src="star.png" class="suffix-icon-no-glow" alt="star">`;
@@ -728,32 +781,68 @@
 
                 UI.emailError.style.display = 'none';
                 UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
-
-                closeModal();
-
-                document.getElementById('loaderScreen').style.display = 'flex';
-
-                tg.sendData(JSON.stringify({
-                    amount: UI.amountInput.value,
-                    method: currentMethod,
-                    email: email
-                }));
-
-                setTimeout(() => {
-                    document.getElementById('loaderScreen').style.display = 'none';
-                    UI.successScreen.style.display = 'flex'; // Показываем окно успеха
-                }, 5000);
-
-            } else if (currentMethod === 'stars') {
-                UI.emailError.style.display = 'none';
-
-                tg.sendData(JSON.stringify({
-                    amount: UI.amountInput.value,
-                    method: currentMethod,
-                    email: ''
-                }));
-                tg.close();
             }
+
+            closeModal();
+
+            // Показываем лоадер
+            document.getElementById('loaderScreen').style.display = 'flex';
+
+            // Формируем данные
+            const payload = {
+                initData: tg.initData,
+                amount: UI.amountInput.value,
+                method: currentMethod,
+                email: email,
+                // Важно: берем текст, удаляем пробелы
+                starsCount: document.getElementById('starCount').innerText.replace(/\s/g, '')
+            };
+
+            // Отправляем запрос на сервер
+            fetch('/webapp-payment/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Скрываем лоадер, ответ получен
+                document.getElementById('loaderScreen').style.display = 'none';
+
+                if (data.status === 'ok') {
+                    if (currentMethod === 'stars') {
+                        // Если это Telegram Stars — закрываем WebApp, счет придет в чат
+                        tg.close();
+                    } 
+                    else if (currentMethod === 'card') {
+                        // Если это карта — проверяем, пришла ли ссылка
+                        if (data.url) {
+                            // Открываем ссылку на ЮКассу
+                            tg.openLink(data.url);
+                            
+                            // (Опционально) Показываем успех, чтобы когда юзер вернулся, было красиво
+                            // Но можно и закрыть окно: tg.close();
+                            UI.successScreen.style.display = 'flex';
+                        } else {
+                            tg.showAlert("Ошибка: Сервер не вернул ссылку на оплату.");
+                        }
+                    }
+                } else {
+                    tg.showAlert("Ошибка создания платежа: " + (data.message || "Неизвестная ошибка"));
+                }
+            })
+            .catch(err => {
+                document.getElementById('loaderScreen').style.display = 'none';
+                // Показываем реальный текст ошибки для отладки
+                tg.showAlert("Ошибка соединения: " + err.message);
+            });
         }
 
         UI.emailInput.addEventListener('input', () => {
@@ -772,7 +861,6 @@
         updateStars();
         renderPrices();
         updateConversion();
-        startTimer();
     </script>
 </body>
 </html>
