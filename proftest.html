@@ -13,9 +13,10 @@
             --accent-color: #007aff;
             --text-color: #ffffff;
             --secondary-text: #8e8e93;
+            --star-glow: rgba(0, 210, 255, 0.5); /* Цвет свечения */
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
@@ -47,6 +48,7 @@
             pointer-events: none;
         }
 
+        /* Хедер пользователя */
         .user-header {
             display: flex;
             align-items: center;
@@ -69,9 +71,13 @@
         }
 
         .avatar-img { width: 100%; height: 100%; object-fit: cover; }
-        .user-name { font-size: 20px; font-weight: 700; }
-        .user-id { font-size: 13px; color: var(--secondary-text); }
 
+        .user-name {
+            font-size: 22px; /* Чуть увеличил шрифт, раз ID теперь нет */
+            font-weight: 700;
+        }
+
+        /* Карточка баланса */
         .balance-card {
             width: 100%;
             max-width: 380px;
@@ -96,6 +102,7 @@
             letter-spacing: 1.5px;
         }
 
+        /* ИДЕАЛЬНОЕ ЦЕНТРИРОВАНИЕ БАЛАНСА */
         .balance-value {
             font-size: 48px;
             font-weight: 800;
@@ -103,14 +110,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 14px;
+            gap: 6px;
         }
 
         .star-icon {
-            width: 34px; height: 34px;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+            transform: scale(1.8) translate(-3px, 1px);
+            filter: drop-shadow(0 0 8px rgba(0, 210, 255, 0.6))
+                    drop-shadow(0 0 15px rgba(157, 80, 187, 0.3));
+            -webkit-filter: drop-shadow(0 0 8px rgba(0, 210, 255, 0.6))
+                            drop-shadow(0 0 15px rgba(157, 80, 187, 0.3));
+            will-change: transform, filter;
         }
 
         .btn-action {
@@ -123,6 +135,7 @@
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
+            transition: transform 0.1s;
             box-shadow: 0 10px 25px rgba(0, 122, 255, 0.35);
         }
 
@@ -143,15 +156,14 @@
         <div class="avatar-circle" id="avatarCircle"></div>
         <div class="user-info-text">
             <div class="user-name" id="userName">Загрузка...</div>
-            <div class="user-id" id="userId">ID: 00000000</div>
         </div>
     </div>
 
     <div class="balance-card">
         <div class="label">Текущий баланс</div>
         <div class="balance-value">
-            <span class="star-icon"></span>
             <span id="balanceAmount">1,500</span>
+            <img src="starxd.png" class="star-icon" alt="star">
         </div>
         <button class="btn-action" id="topUpButton">💳 Пополнить баланс</button>
     </div>
@@ -159,12 +171,14 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.ready();
 
+        // Анимация звездного фона
         const canvas = document.getElementById('starCanvas');
         const ctx = canvas.getContext('2d');
         let width, height, centerX, centerY;
         let stars = [];
-        const STAR_COUNT = 1500; // Больше звезд для красоты
+        const STAR_COUNT = 1500;
         const SPEED = 0.35;
 
         function initStars() {
@@ -180,29 +194,23 @@
                 stars.push({
                     x: Math.random() * width - centerX,
                     y: Math.random() * height - centerY,
-                    z: Math.random() * width,
-                    o: Math.random()
+                    z: Math.random() * width
                 });
             }
         }
 
         function updateStars() {
             ctx.clearRect(0, 0, width, height);
-
             for (let i = 0; i < STAR_COUNT; i++) {
                 let s = stars[i];
                 s.z -= SPEED;
-
                 if (s.z <= 0) {
                     s.z = width;
                     s.x = Math.random() * width - centerX;
                     s.y = Math.random() * height - centerY;
                 }
-
                 const pX = (s.x / s.z) * (width * 0.5) + centerX;
                 const pY = (s.y / s.z) * (height * 0.5) + centerY;
-
-                // Звезды на расстоянии почти не видны, вблизи — ярче
                 const size = (1 - s.z / width) * 2.2;
                 const opacity = (1 - s.z / width) * 0.8;
 
@@ -214,11 +222,12 @@
             requestAnimationFrame(updateStars);
         }
 
+        // Загрузка данных пользователя
         function loadUser() {
             const user = tg.initDataUnsafe?.user;
             if (user) {
                 document.getElementById('userName').textContent = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-                document.getElementById('userId').textContent = 'ID: ' + user.id;
+
                 const avatar = document.getElementById('avatarCircle');
                 if (user.photo_url) {
                     avatar.innerHTML = `<img src="${user.photo_url}" class="avatar-img">`;
