@@ -474,7 +474,7 @@
 
             <div class="confirm-row" id="emailRow">
                 <div class="confirm-label">Ваш email для отправки чека:</div>
-                <input type="email" id="emailInput" placeholder="example@mail.ru" style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2); text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;">
+                <input type="text" id="emailInput" placeholder="example@mail.ru" style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2); text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;">
                 <div id="emailError">Укажите email для отправки чека</div>
             </div>
 
@@ -850,13 +850,14 @@
             UI.emailInput.blur();
 
             if (currentMethod === 'card') {
-                email = UI.emailInput.value;
-                if (!email.includes('@')) {
+                email = UI.emailInput.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+                if (!emailRegex.test(email)) {
                     UI.emailInput.style.borderColor = '#ff453a';
+                    UI.emailError.textContent = 'Введите корректный email';
                     UI.emailError.style.display = 'block';
                     return;
                 }
-
                 UI.emailError.style.display = 'none';
                 UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
             }
