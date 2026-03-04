@@ -341,15 +341,31 @@
             }
         }
 
+        // Загрузка баланса
+        function loadBalance() {
+            const user = tg.initDataUnsafe?.user;
+            if (!user) return; // Выходим, если открыто не из Telegram
+
+            fetch(`/user-balance/?user_id=${user.id}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.balance !== undefined) {
+                        document.getElementById('balanceAmount').textContent = data.balance;
+                    }
+                })
+                .catch(err => console.error('Не удалось загрузить баланс:', err));
+        }
+
         document.getElementById('topUpButton').addEventListener('click', () => {
             tg.HapticFeedback.impactOccurred('medium');
-            tg.sendData(JSON.stringify({action: "open_payment"}));
+            window.location.href = 'https://stage-test.ai-prorok.webtm.ru/payment/';
         });
 
         window.addEventListener('resize', initStars);
         initStars();
         updateStars();
         loadUser();
+        loadBalance();
     </script>
 </body>
 </html>
