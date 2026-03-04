@@ -240,13 +240,7 @@
         }
     </style>
 </head>
-<body>
-    //
-    // ЭТО УДАЛИТЬ ПОТОМ ТУПО ДЕБАГ
-    //
-    <div id="debug" style="position:fixed;bottom:0;left:0;right:0;background:rgba(255,0,0,0.8);
-    color:white;font-size:10px;padding:8px;word-break:break-all;z-index:9999;"></div>
-    
+<body>    
     <canvas id="starCanvas"></canvas>
     <div class="overlay"></div>
 
@@ -344,8 +338,6 @@
                     avatar.innerHTML = `<span style="font-size: 24px">${user.first_name[0]}</span>`;
                 }
             }
-            document.getElementById('debug').textContent = 
-                'initData: ' + tg.initData + ' | user: ' + JSON.stringify(tg.initDataUnsafe?.user);
         }
 
         // Загрузка баланса
@@ -371,8 +363,18 @@
         window.addEventListener('resize', initStars);
         initStars();
         updateStars();
-        loadUser();
-        loadBalance();
+        function waitForUser(attempt = 0) {
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                loadUser(user);
+                loadBalance(user);
+            } else if (attempt < 15) {
+                setTimeout(() => waitForUser(attempt + 1), 150);
+            } else {
+                document.getElementById('userName').textContent = 'Пользователь';
+            }
+        }
+        waitForUser();
     </script>
 </body>
 </html>
