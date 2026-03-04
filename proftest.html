@@ -277,11 +277,7 @@
         tg.expand();
         tg.ready();
 
-        tg.BackButton.show();
-
-        tg.BackButton.onClick(() => {
-            window.location.href = 'https://stage-test.ai-prorok.webtm.ru/profile/';
-        });
+        tg.BackButton.hide();
         
         /* --- АНИМАЦИЯ ЗВЕЗДНОГО ФОНА --- */
         const canvas = document.getElementById('starCanvas');
