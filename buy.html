@@ -430,7 +430,7 @@
 
         <div class="input-section">
             <div class="input-wrapper">
-                <input type="number" id="amountInput" value="300" placeholder="100" inputmode="numeric">
+                <input type="number" id="amountInput" value="300" placeholder="100" inputmode="numeric" step="1" min="100">
                 <div id="currencySuffix" class="currency-suffix">₽</div>
             </div>
 
@@ -915,6 +915,10 @@
 
         // НОВОЕ: Прячем ошибку, как только юзер начинает сам вводить новую сумму
         UI.amountInput.addEventListener('input', () => {
+            // Убираем дробную часть
+            if (UI.amountInput.value.includes('.') || UI.amountInput.value.includes(',')) {
+                UI.amountInput.value = Math.floor(parseFloat(UI.amountInput.value)) || '';
+            }
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
             UI.amountInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
             UI.amountError.style.display = 'none';
