@@ -187,10 +187,24 @@
         .pay-button:active { transform: scale(0.98); }
         .cancel-btn { background: transparent; color: var(--secondary-text); border: none; margin-top: 12px; width: 100%; font-size: 14px; touch-action: manipulation; padding: 10px; }
 
-        .converter-hint { text-align: center; font-size: 13px; color: var(--secondary-text); margin-top: 8px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; }
+        .converter-hint {
+            text-align: center;
+            font-size: 13px;
+            color: var(--secondary-text);
+            margin-top: 0px;
+            margin-bottom: 12px; /* Уменьшили отступ до кнопки "Пополнить" */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
         #oldStarCount { text-decoration: line-through; margin-right: 3px; opacity: 0.35; display: none; }
 
-        .presets { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 24px; }
+        .presets {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px; /* Уменьшили отступ от кнопок до "Итого" */
+        }
         .preset-btn { flex: 1; background: rgba(255, 255, 255, 0.08); border: none; border-radius: 20px; padding: 10px 0; color: var(--text-color); font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation; }
         .preset-btn.active { background: var(--text-color); color: #000; }
 
@@ -391,6 +405,8 @@
                 <div id="currencySuffix" class="currency-suffix">₽</div>
             </div>
 
+            <div id="presetsContainer" class="presets"></div>
+
             <div class="converter-hint">
                 Итого на баланс:&nbsp;
                 <span id="oldStarCount"></span>
@@ -518,12 +534,12 @@
                     } else {
                         timeLeft = 0;
                         UI.promoWrapper.style.display = 'none';
-                        updateConversion(); 
+                        updateConversion();
                     }
                 })
                 .catch(err => console.error("Ошибка загрузки FOMO:", err));
         }
-        
+
         document.addEventListener('touchstart', (e) => {
             if (e.target.closest('button, .method, .pay-button, .cancel-btn')) {
                 return;
@@ -583,7 +599,7 @@
                 updateConversion(); // обновляем отображение
             })
             .catch(err => console.error('Не удалось загрузить курсы:', err));
-        
+
         const measureSpan = document.createElement('span');
         measureSpan.style.visibility = 'hidden';
         measureSpan.style.position = 'absolute';
@@ -653,15 +669,15 @@
             // 1. Очищаем старые интервалы, чтобы предотвратить дублирование (перескоки)
             if (timerInterval) clearInterval(timerInterval);
             if (sparksInterval) clearInterval(sparksInterval);
-        
+
             // 2. Запоминаем ТОЧНОЕ время окончания по часам устройства (в миллисекундах)
             const endTime = Date.now() + (secondsFromServer * 1000);
-        
+
             function tick() {
                 const now = Date.now();
                 // Считаем реальную разницу во времени
                 timeLeft = Math.round((endTime - now) / 1000);
-        
+
                 if (timeLeft <= 0) {
                     timeLeft = 0;
                     clearInterval(timerInterval);
@@ -670,16 +686,16 @@
                     updateConversion(); // Пересчитываем баланс без бонуса
                     return;
                 }
-        
+
                 // Обновляем текст
                 let m = Math.floor(timeLeft / 60);
                 let s = timeLeft % 60;
                 UI.timer.textContent = `${m}:${s < 10 ? '0' + s : s}`;
             }
-        
+
             tick(); // Вызываем сразу 1 раз, чтобы не ждать первую секунду
             timerInterval = setInterval(tick, 1000);
-        
+
             // 3. Отдельный независимый интервал для визуальных эффектов (искр)
             sparksInterval = setInterval(() => {
                 if (timeLeft > 0 && UI.promoWrapper.style.display !== 'none') {
@@ -690,7 +706,7 @@
                 }
             }, 150);
         }
-        
+
         function adjustSuffix() {
             const val = UI.amountInput.value || "0";
             measureSpan.style.font = window.getComputedStyle(UI.amountInput).font;
@@ -724,13 +740,17 @@
         }
 
         function setMethod(m) {
-            vibrate();
-            currentMethod = m;
-            UI.methodCard.classList.toggle('active', m === 'card');
-            UI.methodStars.classList.toggle('active', m === 'stars');
-            UI.currencySuffix.innerHTML = m === 'card' ? '₽' : SUFFIX_STAR_HTML;
-            updateConversion();
-        }
+                    vibrate();
+                    currentMethod = m;
+                    UI.methodCard.classList.toggle('active', m === 'card');
+                    UI.methodStars.classList.toggle('active', m === 'stars');
+                    UI.currencySuffix.innerHTML = m === 'card' ? '₽' : SUFFIX_STAR_HTML;
+
+                    // НОВОЕ: Убираем подсветку с кнопок (150, 300, 500...) при смене способа оплаты
+                    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+
+                    updateConversion();
+                }
 
         function updateAmount(v, el) {
             vibrate();
@@ -744,8 +764,8 @@
             vibrate();
             const starCount = UI.starCount.textContent;
             UI.modalMethod.textContent = currentMethod === 'card' ? 'Карта / СБП' : 'Telegram Stars';
-            
-            UI.modalStarsSpan.textContent = starCount; 
+
+            UI.modalStarsSpan.textContent = starCount;
 
             if (currentMethod === 'stars') {
                 UI.modalAmount.innerHTML = `${UI.amountInput.value} <img src="star.png" class="suffix-icon-no-glow" alt="star">`;
@@ -820,13 +840,13 @@
                     if (currentMethod === 'stars') {
                         // Если это Telegram Stars — закрываем WebApp, счет придет в чат
                         tg.close();
-                    } 
+                    }
                     else if (currentMethod === 'card') {
                         // Если это карта — проверяем, пришла ли ссылка
                         if (data.url) {
                             // Открываем ссылку на ЮКассу
                             tg.openLink(data.url);
-                            
+
                             // (Опционально) Показываем успех, чтобы когда юзер вернулся, было красиво
                             // Но можно и закрыть окно: tg.close();
                             UI.successScreen.style.display = 'flex';
@@ -855,7 +875,10 @@
         `).join('');
 
         window.addEventListener('resize', initStars);
-        UI.amountInput.addEventListener('input', updateConversion);
+        UI.amountInput.addEventListener('input', () => {
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            updateConversion();
+        });
 
         initStars();
         updateStars();
