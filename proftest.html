@@ -240,8 +240,7 @@
         }
     </style>
 </head>
-<body>
-
+<body>    
     <canvas id="starCanvas"></canvas>
     <div class="overlay"></div>
 
@@ -328,28 +327,58 @@
         }
 
         // Загрузка данных пользователя
-        function loadUser() {
-            const user = tg.initDataUnsafe?.user;
-            if (user) {
-                document.getElementById('userName').textContent = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-                const avatar = document.getElementById('avatarCircle');
-                if (user.photo_url) {
-                    avatar.innerHTML = `<img src="${user.photo_url}" class="avatar-img">`;
-                } else {
-                    avatar.innerHTML = `<span style="font-size: 24px">${user.first_name[0]}</span>`;
-                }
+        function loadUser(user) {
+            document.getElementById('userName').textContent =
+                user.first_name + (user.last_name ? ' ' + user.last_name : '');
+            const avatar = document.getElementById('avatarCircle');
+            if (user.photo_url) {
+                avatar.innerHTML = `<img src="${user.photo_url}" class="avatar-img">`;
+            } else {
+                avatar.innerHTML = `<span style="font-size:24px">${user.first_name[0]}</span>`;
             }
+        }
+
+        // Загрузка баланса
+        function loadBalance(user) {
+            fetch(`/user-balance/?user_id=${user.id}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.balance !== undefined) {
+                        document.getElementById('balanceAmount').textContent = data.balance;
+                    }
+                })
+                .catch(err => console.error('Баланс не загружен:', err));
         }
 
         document.getElementById('topUpButton').addEventListener('click', () => {
             tg.HapticFeedback.impactOccurred('medium');
-            tg.sendData(JSON.stringify({action: "open_payment"}));
+            window.location.href = 'https://stage-test.ai-prorok.webtm.ru/payment/';
         });
 
         window.addEventListener('resize', initStars);
         initStars();
         updateStars();
-        loadUser();
+        function waitForUser(attempt = 0) {
+            const debug = document.getElementById('debug');
+            const tgExists = typeof window.Telegram !== 'undefined';
+            const webAppExists = tgExists && typeof window.Telegram.WebApp !== 'undefined';
+            const initData = tgExists && webAppExists ? tg.initData : 'NO_WEBAPP';
+            const user = tg?.initDataUnsafe?.user;
+            
+            if (debug) {
+                debug.textContent = `[${attempt}] tg:${tgExists} | wa:${webAppExists} | initData:"${initData}" | user:${JSON.stringify(user)}`;
+            }
+            
+            if (user) {
+                loadUser(user);
+                loadBalance(user);
+            } else if (attempt < 15) {
+                setTimeout(() => waitForUser(attempt + 1), 150);
+            } else {
+                document.getElementById('userName').textContent = 'Пользователь';
+            }
+        }
+        waitForUser();
     </script>
 </body>
 </html>
