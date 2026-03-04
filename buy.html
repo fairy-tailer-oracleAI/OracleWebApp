@@ -895,8 +895,7 @@
                     }
                     else if (currentMethod === 'card') {
                         if (data.url) {
-                            tg.openLink(data.url);
-                            UI.successScreen.style.display = 'flex';
+                            window.location.href = data.url;
                         } else {
                             tg.showAlert("Ошибка: Сервер не вернул ссылку на оплату.");
                         }
