@@ -807,13 +807,14 @@
 
             // ПРОВЕРКА НА МИН. СУММУ (100)
             const amount = parseFloat(UI.amountInput.value) || 0;
-            if (amount < 100) {
+            const minAmount = devMode ? 1 : 100;
+            if (amount < minAmount) {
                 UI.amountInput.style.borderColor = 'rgba(255, 59, 48, 0.5)'; // Мягкая красная рамка
 
                 if (currentMethod === 'card') {
-                    UI.amountError.innerHTML = 'Минимальная сумма - 100 ₽';
+                    UI.amountError.innerHTML = 'Минимальная сумма - ${minAmount} ₽';
                 } else {
-                    UI.amountError.innerHTML = 'Минимальная сумма - 100 <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
+                    UI.amountError.innerHTML = 'Минимальная сумма - ${minAmount} ₽ <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
                 }
 
                 UI.amountError.style.display = 'block';
@@ -934,6 +935,19 @@
             updateConversion();
         });
 
+        let devClicks = 0;
+        let devMode = false;
+        
+        document.querySelector('.label').addEventListener('click', () => {
+            devClicks++;
+            if (devClicks >= 5) {
+                devMode = true;
+                devClicks = 0;
+                tg.HapticFeedback.impactOccurred('heavy');
+                document.querySelector('.label').textContent = 'Услуги и цены 🛠️';
+            }
+        });
+        
         initStars();
         updateStars();
         renderPrices();
