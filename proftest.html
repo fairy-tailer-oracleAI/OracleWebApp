@@ -359,7 +359,16 @@
         initStars();
         updateStars();
         function waitForUser(attempt = 0) {
-            const user = tg.initDataUnsafe?.user;
+            const debug = document.getElementById('debug');
+            const tgExists = typeof window.Telegram !== 'undefined';
+            const webAppExists = tgExists && typeof window.Telegram.WebApp !== 'undefined';
+            const initData = tgExists && webAppExists ? tg.initData : 'NO_WEBAPP';
+            const user = tg?.initDataUnsafe?.user;
+            
+            if (debug) {
+                debug.textContent = `[${attempt}] tg:${tgExists} | wa:${webAppExists} | initData:"${initData}" | user:${JSON.stringify(user)}`;
+            }
+            
             if (user) {
                 loadUser(user);
                 loadBalance(user);
