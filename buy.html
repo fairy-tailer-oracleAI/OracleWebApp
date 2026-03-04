@@ -572,6 +572,15 @@
                     }
                 })
                 .catch(err => console.error("Ошибка загрузки FOMO:", err));
+            
+            fetch(`/user-email/?user_id=${userId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.email) {
+                        UI.emailInput.value = data.email;
+                    }
+                })
+                .catch(err => console.error('Email не загружен:', err));
         }
 
         document.addEventListener('touchstart', (e) => {
