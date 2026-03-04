@@ -904,7 +904,10 @@
                     }
                     else if (currentMethod === 'card') {
                         if (data.url) {
-                            window.location.replace(data.url);
+                            tg.openLink(data.url);
+
+                            document.getElementById('loaderScreen').style.display = 'none';
+                            UI.successScreen.style.display = 'flex';
                         } else {
                             tg.showAlert("Ошибка: Сервер не вернул ссылку на оплату.");
                         }
