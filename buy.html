@@ -555,6 +555,13 @@
         tg.BackButton.onClick(() => {
             window.location.href = 'https://stage-test.ai-prorok.webtm.ru/profile/';
         });
+
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) {
+                // Страница восстановлена из кэша (вернулись с ЮКассы)
+                document.getElementById('loaderScreen').style.display = 'none';
+            }
+        });
         
         const userId = tg.initDataUnsafe?.user?.id;
 
@@ -812,9 +819,9 @@
                 UI.amountInput.style.borderColor = 'rgba(255, 59, 48, 0.5)'; // Мягкая красная рамка
 
                 if (currentMethod === 'card') {
-                    UI.amountError.innerHTML = 'Минимальная сумма - ${minAmount} ₽';
+                    UI.amountError.innerHTML = 'Минимальная сумма - 100 ₽';
                 } else {
-                    UI.amountError.innerHTML = 'Минимальная сумма - ${minAmount} ₽ <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
+                    UI.amountError.innerHTML = 'Минимальная сумма - 100 ₽ <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
                 }
 
                 UI.amountError.style.display = 'block';
@@ -897,7 +904,7 @@
                     }
                     else if (currentMethod === 'card') {
                         if (data.url) {
-                            window.location.href = data.url;
+                            window.location.replace(data.url);
                         } else {
                             tg.showAlert("Ошибка: Сервер не вернул ссылку на оплату.");
                         }
