@@ -327,24 +327,19 @@
         }
 
         // Загрузка данных пользователя
-        function loadUser() {
-            const user = tg.initDataUnsafe?.user;
-            if (user) {
-                document.getElementById('userName').textContent = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-                const avatar = document.getElementById('avatarCircle');
-                if (user.photo_url) {
-                    avatar.innerHTML = `<img src="${user.photo_url}" class="avatar-img">`;
-                } else {
-                    avatar.innerHTML = `<span style="font-size: 24px">${user.first_name[0]}</span>`;
-                }
+        function loadUser(user) {
+            document.getElementById('userName').textContent =
+                user.first_name + (user.last_name ? ' ' + user.last_name : '');
+            const avatar = document.getElementById('avatarCircle');
+            if (user.photo_url) {
+                avatar.innerHTML = `<img src="${user.photo_url}" class="avatar-img">`;
+            } else {
+                avatar.innerHTML = `<span style="font-size:24px">${user.first_name[0]}</span>`;
             }
         }
 
         // Загрузка баланса
-        function loadBalance() {
-            const user = tg.initDataUnsafe?.user;
-            if (!user) return; // Выходим, если открыто не из Telegram
-
+        function loadBalance(user) {
             fetch(`/user-balance/?user_id=${user.id}`)
                 .then(r => r.json())
                 .then(data => {
@@ -352,7 +347,7 @@
                         document.getElementById('balanceAmount').textContent = data.balance;
                     }
                 })
-                .catch(err => console.error('Не удалось загрузить баланс:', err));
+                .catch(err => console.error('Баланс не загружен:', err));
         }
 
         document.getElementById('topUpButton').addEventListener('click', () => {
