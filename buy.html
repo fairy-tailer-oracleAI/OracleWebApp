@@ -424,8 +424,13 @@
 
         <div class="label">Способ оплаты</div>
         <div class="methods">
-            <div class="method active" id="method-card" onclick="setMethod('card')">Карта / СБП</div>
+            <div class="method active" id="method-card" onclick="setMethod('card')">Карта</div>
             <div class="method" id="method-stars" onclick="setMethod('stars')">Telegram Stars</div>
+        </div>
+        <div class="methods" style="margin-top: -10px;">
+            <div class="method" id="method-sbp" onclick="setMethod('sbp')" style="grid-column: 1 / -1;">
+                СБП — быстрый перевод
+            </div>
         </div>
 
         <div class="input-section">
@@ -472,10 +477,14 @@
                 <div id="modalAmount" class="confirm-value2">0 ₽</div>
             </div>
 
-            <div class="confirm-row" id="emailRow">
-                <div class="confirm-label">Ваш email для отправки чека:</div>
-                <input type="text" id="emailInput" placeholder="example@mail.ru" style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2); text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;">
-                <div id="emailError">Укажите email для отправки чека</div>
+            <div class="confirm-row" id="phoneRow">
+                <div class="confirm-label">Телефон для чека:</div>
+                <input type="tel" id="phoneInput" placeholder="+7 (999) 999-99-99" 
+                    style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2); 
+                    text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;">
+                <div id="phoneError" style="color:#ff6b6b; font-size:12px; margin-top:6px; display:none; text-align:center; font-weight:500;">
+                    Введите корректный номер телефона
+                </div>
             </div>
 
             <button class="pay-button" style="margin-top: 10px;" onclick="finalPay()">Оплатить</button>
@@ -580,14 +589,14 @@
                 })
                 .catch(err => console.error("Ошибка загрузки FOMO:", err));
             
-            fetch(`/user-email/?user_id=${userId}`)
+            fetch(`/user-phone/?user_id=${userId}`)
                 .then(r => r.json())
                 .then(data => {
-                    if (data.email) {
-                        UI.emailInput.value = data.email;
+                    if (data.phone) {
+                        document.getElementById('phoneInput').value = data.phone;
                     }
                 })
-                .catch(err => console.error('Email не загружен:', err));
+                .catch(err => console.error('Phone не загружен:', err));
         }
 
         document.addEventListener('touchstart', (e) => {
@@ -789,10 +798,9 @@
             currentMethod = m;
             UI.methodCard.classList.toggle('active', m === 'card');
             UI.methodStars.classList.toggle('active', m === 'stars');
-            UI.currencySuffix.innerHTML = m === 'card' ? '₽' : SUFFIX_STAR_HTML;
-
+            document.getElementById('method-sbp').classList.toggle('active', m === 'sbp');
+            UI.currencySuffix.innerHTML = m === 'stars' ? SUFFIX_STAR_HTML : '₽';
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-
             updateConversion();
         }
 
@@ -835,10 +843,10 @@
 
             if (currentMethod === 'stars') {
                 UI.modalAmount.innerHTML = `${UI.amountInput.value} <img src="star.png" class="suffix-icon-no-glow" alt="star">`;
-                UI.emailRow.style.setProperty('display', 'none', 'important');
+                document.getElementById('phoneRow').style.setProperty('display', 'none', 'important');
             } else {
                 UI.modalAmount.textContent = `${UI.amountInput.value} ₽`;
-                UI.emailRow.style.setProperty('display', 'flex', 'important');
+                document.getElementById('phoneRow').style.setProperty('display', 'flex', 'important');
             }
             UI.modalOverlay.style.display = 'flex';
         }
@@ -853,32 +861,28 @@
 
         function finalPay() {
             vibrate();
-            let email = '';
-
-            UI.emailInput.blur();
-
-            if (currentMethod === 'card') {
-                email = UI.emailInput.value.trim();
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-                if (!emailRegex.test(email)) {
-                    UI.emailInput.style.borderColor = '#ff453a';
-                    UI.emailError.textContent = 'Введите корректный email';
-                    UI.emailError.style.display = 'block';
+            let phone = '';
+            
+            if (currentMethod !== 'stars') {
+                phone = document.getElementById('phoneInput').value.trim();
+                const digits = phone.replace(/\D/g, '');
+                if (digits.length < 10) {
+                    document.getElementById('phoneInput').style.borderColor = '#ff453a';
+                    document.getElementById('phoneError').style.display = 'block';
                     return;
                 }
-                UI.emailError.style.display = 'none';
-                UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
+                document.getElementById('phoneError').style.display = 'none';
+                document.getElementById('phoneInput').style.borderColor = 'rgba(255,255,255,0.2)';
             }
-
+        
             closeModal();
-
             document.getElementById('loaderScreen').style.display = 'flex';
-
+        
             const payload = {
                 initData: tg.initData,
                 amount: UI.amountInput.value,
-                method: currentMethod,
-                email: email,
+                method: currentMethod,  // 'card', 'stars', или 'sbp'
+                phone: phone,
                 starsCount: document.getElementById('starCount').innerText.replace(/\s/g, '')
             };
 
