@@ -625,9 +625,6 @@
             modalMethod: document.getElementById('modalMethod'),
             modalStarsSpan: document.getElementById('modalStars'),
             modalAmount: document.getElementById('modalAmount'),
-            emailRow: document.getElementById('emailRow'),
-            emailInput: document.getElementById('emailInput'),
-            emailError: document.getElementById('emailError'),
             priceList: document.getElementById('priceListContainer'),
             presets: document.getElementById('presetsContainer'),
             successWrapper: document.getElementById('successWrapper'),
@@ -826,7 +823,7 @@
             if (amount < minAmount) {
                 UI.amountInput.style.borderColor = 'rgba(255, 59, 48, 0.5)'; // Мягкая красная рамка
 
-                if (currentMethod === 'card') {
+                if (currentMethod === 'card' || currentMethod === 'sbp') {
                     UI.amountError.innerHTML = 'Минимальная сумма - 100 ₽';
                 } else {
                     UI.amountError.innerHTML = 'Минимальная сумма - 100 ₽ <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
@@ -853,10 +850,10 @@
 
         function closeModal() {
             vibrate();
-            UI.emailInput.blur();
+            document.getElementById('phoneInput').blur();
             UI.modalOverlay.style.display = 'none';
-            UI.emailError.style.display = 'none';
-            UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
+            document.getElementById('phoneError').style.display = 'none';
+            document.getElementById('phoneInput').style.borderColor = 'rgba(255,255,255,0.2)';
         }
 
         function finalPay() {
@@ -925,11 +922,6 @@
                 tg.showAlert("Ошибка соединения: " + err.message);
             });
         }
-
-        UI.emailInput.addEventListener('input', () => {
-            UI.emailError.style.display = 'none';
-            UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
-        });
 
         UI.presets.innerHTML = [150, 300, 500, 1500].map(v => `
             <button class="preset-btn ${v === 300 ? 'active' : ''}" onclick="updateAmount(${v}, this)">${v}</button>
