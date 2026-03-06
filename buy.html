@@ -834,7 +834,13 @@
             }
 
             const starCount = UI.starCount.textContent;
-            UI.modalMethod.textContent = currentMethod === 'card' ? 'Карта / СБП' : 'Telegram Stars';
+            if (currentMethod === 'stars') {
+                UI.modalMethod.textContent = 'Telegram Stars';
+            } else if (currentMethod === 'sbp') {
+                UI.modalMethod.textContent = 'СБП';
+            } else {
+                UI.modalMethod.textContent = 'Карта';
+            }
 
             UI.modalStarsSpan.textContent = starCount;
 
