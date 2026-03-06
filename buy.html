@@ -116,19 +116,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Ошибка для email */
-        #emailError {
-            color: #ff6b6b;
-            font-size: 12px;
-            margin-top: 6px;
-            margin-bottom: 0;
-            width: 100%;
-            box-sizing: border-box;
-            display: none;
-            text-align: center;
-            font-weight: 500;
-        }
-
         .currency-suffix {
             position: absolute;
             pointer-events: none;
@@ -478,10 +465,18 @@
             </div>
 
             <div class="confirm-row" id="phoneRow">
-                <div class="confirm-label">Телефон для чека:</div>
-                <input type="tel" id="phoneInput" placeholder="+7 (999) 999-99-99" 
-                    style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2); 
-                    text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;">
+                <div class="confirm-label">Телефон для отправки чека:</div>
+                <input
+                    type="tel"
+                    id="phoneInput"
+                    value="+7 "
+                    inputmode="tel"
+                    autocomplete="tel"
+                    maxlength="18"
+                    spellcheck="false"
+                    style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2);
+                    text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;"
+                >
                 <div id="phoneError" style="color:#ff6b6b; font-size:12px; margin-top:6px; display:none; text-align:center; font-weight:500;">
                     Введите корректный номер телефона
                 </div>
@@ -560,10 +555,16 @@
         tg.expand();
         tg.ready();
 
-        tg.BackButton.show();
-        tg.BackButton.onClick(() => {
-            window.location.href = 'https://stage-test.ai-prorok.webtm.ru/profile/';
-        });
+        if (tg.BackButton) {
+        try {
+            tg.BackButton.show();
+            tg.BackButton.onClick(() => {
+                window.location.href = 'https://stage-test.ai-prorok.webtm.ru/profile/';
+            });
+        } catch (e) {
+            console.warn('BackButton недоступна в этом клиенте Telegram', e);
+        }
+    }
 
         window.addEventListener('pageshow', (e) => {
             if (e.persisted) {
@@ -593,7 +594,9 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.phone) {
-                        document.getElementById('phoneInput').value = data.phone;
+                        setPhoneValueFromAny(data.phone);
+                    } else {
+                        setPhoneValueFromAny('+7 ');
                     }
                 })
                 .catch(err => console.error('Phone не загружен:', err));
@@ -663,6 +666,155 @@
         measureSpan.style.whiteSpace = 'pre';
         document.body.appendChild(measureSpan);
 
+        const PHONE_PREFIX = '+7 ';
+        const PHONE_DIGITS_COUNT = 10;
+        
+        function getPhoneInput() {
+            return document.getElementById('phoneInput');
+        }
+        
+        function getPhoneDigits(value) {
+            let digits = (value || '').replace(/\D/g, '');
+        
+            if (digits.startsWith('7')) {
+                digits = digits.slice(1);
+            } else if (digits.startsWith('8')) {
+                digits = digits.slice(1);
+            }
+        
+            return digits.slice(0, PHONE_DIGITS_COUNT);
+        }
+        
+        function formatPhoneFromDigits(digits) {
+            let result = PHONE_PREFIX;
+        
+            if (digits.length > 0) {
+                result += '(' + digits.slice(0, 3);
+            }
+            if (digits.length >= 3) {
+                result += ') ';
+            }
+            if (digits.length > 3) {
+                result += digits.slice(3, 6);
+            }
+            if (digits.length >= 6) {
+                result += '-';
+            }
+            if (digits.length > 6) {
+                result += digits.slice(6, 8);
+            }
+            if (digits.length >= 8) {
+                result += '-';
+            }
+            if (digits.length > 8) {
+                result += digits.slice(8, 10);
+            }
+        
+            return result;
+        }
+        
+        function setPhoneValueFromAny(rawValue) {
+            const phoneInput = getPhoneInput();
+            const digits = getPhoneDigits(rawValue);
+            phoneInput.value = formatPhoneFromDigits(digits);
+            return digits;
+        }
+        
+        function ensurePhoneCaret() {
+            const phoneInput = getPhoneInput();
+            const minPos = PHONE_PREFIX.length;
+        
+            if (phoneInput.selectionStart < minPos || phoneInput.selectionEnd < minPos) {
+                phoneInput.setSelectionRange(minPos, minPos);
+            }
+        }
+        
+        function resetPhoneError() {
+            const phoneInput = getPhoneInput();
+            document.getElementById('phoneError').style.display = 'none';
+            phoneInput.style.borderColor = 'rgba(255,255,255,0.2)';
+        }
+
+        function hideAmountError() {
+            UI.amountInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            UI.amountError.style.display = 'none';
+        }
+        
+        function showAmountError() {
+            UI.amountInput.style.borderColor = 'rgba(255, 59, 48, 0.5)';
+        
+            if (currentMethod === 'card' || currentMethod === 'sbp') {
+                UI.amountError.innerHTML = 'Минимальная сумма — 100 ₽';
+            } else {
+                UI.amountError.innerHTML = 'Минимальная сумма — 100 <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
+            }
+        
+            UI.amountError.style.display = 'block';
+        }
+        
+        function initPhoneMask() {
+            const phoneInput = getPhoneInput();
+        
+            setPhoneValueFromAny(phoneInput.value || PHONE_PREFIX);
+        
+            phoneInput.addEventListener('focus', () => {
+                if (!phoneInput.value) {
+                    phoneInput.value = PHONE_PREFIX;
+                }
+                requestAnimationFrame(() => {
+                    const pos = phoneInput.value.length;
+                    phoneInput.setSelectionRange(pos, pos);
+                });
+            });
+        
+            phoneInput.addEventListener('click', () => {
+                ensurePhoneCaret();
+            });
+        
+            phoneInput.addEventListener('keydown', (e) => {
+                const start = phoneInput.selectionStart ?? 0;
+                const end = phoneInput.selectionEnd ?? 0;
+                const minPos = PHONE_PREFIX.length;
+        
+                if (
+                    (e.key === 'Backspace' && start <= minPos && end <= minPos) ||
+                    (e.key === 'ArrowLeft' && start <= minPos) ||
+                    (e.key === 'Home')
+                ) {
+                    e.preventDefault();
+                    phoneInput.setSelectionRange(minPos, minPos);
+                    return;
+                }
+        
+                if (e.key === 'Delete' && start < minPos) {
+                    e.preventDefault();
+                    phoneInput.setSelectionRange(minPos, minPos);
+                }
+            });
+        
+            phoneInput.addEventListener('input', () => {
+                const digits = setPhoneValueFromAny(phoneInput.value);
+                resetPhoneError();
+        
+                requestAnimationFrame(() => {
+                    const pos = formatPhoneFromDigits(digits).length;
+                    phoneInput.setSelectionRange(pos, pos);
+                });
+            });
+        
+            phoneInput.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasted = (e.clipboardData || window.clipboardData).getData('text');
+                const digits = setPhoneValueFromAny(pasted);
+                resetPhoneError();
+        
+                requestAnimationFrame(() => {
+                    const pos = formatPhoneFromDigits(digits).length;
+                    phoneInput.setSelectionRange(pos, pos);
+                });
+            });
+        }
+        
         function vibrate() {
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('light');
@@ -803,6 +955,7 @@
             document.getElementById('method-sbp').classList.toggle('active', m === 'sbp');
             UI.currencySuffix.innerHTML = m === 'stars' ? SUFFIX_STAR_HTML : '₽';
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            hideAmountError();
             updateConversion();
         }
 
@@ -813,9 +966,7 @@
             el.classList.add('active');
 
             // НОВОЕ: Прячем ошибку, если пользователь нажал на кнопку-пресет
-            UI.amountInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-            UI.amountError.style.display = 'none';
-
+            hideAmountError();
             updateConversion();
         }
 
@@ -826,16 +977,8 @@
             const amount = parseFloat(UI.amountInput.value) || 0;
             const minAmount = devMode ? 1 : 100;
             if (amount < minAmount) {
-                UI.amountInput.style.borderColor = 'rgba(255, 59, 48, 0.5)'; // Мягкая красная рамка
-
-                if (currentMethod === 'card' || currentMethod === 'sbp') {
-                    UI.amountError.innerHTML = 'Минимальная сумма - 100 ₽';
-                } else {
-                    UI.amountError.innerHTML = 'Минимальная сумма - 100 <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
-                }
-
-                UI.amountError.style.display = 'block';
-                return; // Тормозим открытие окна
+                showAmountError();
+                return;
             }
 
             const starCount = UI.starCount.textContent;
@@ -856,15 +999,26 @@
                 UI.modalAmount.textContent = `${UI.amountInput.value} ₽`;
                 document.getElementById('phoneRow').style.setProperty('display', 'flex', 'important');
             }
+            if (currentMethod !== 'stars') {
+                const phoneInput = document.getElementById('phoneInput');
+                if (!phoneInput.value || phoneInput.value.trim() === '') {
+                    phoneInput.value = PHONE_PREFIX;
+                }
+            }
             UI.modalOverlay.style.display = 'flex';
         }
 
         function closeModal() {
             vibrate();
-            document.getElementById('phoneInput').blur();
+            const phoneInput = document.getElementById('phoneInput');
+            phoneInput.blur();
             UI.modalOverlay.style.display = 'none';
             document.getElementById('phoneError').style.display = 'none';
-            document.getElementById('phoneInput').style.borderColor = 'rgba(255,255,255,0.2)';
+            phoneInput.style.borderColor = 'rgba(255,255,255,0.2)';
+        
+            if (!phoneInput.value || phoneInput.value.trim() === '') {
+                phoneInput.value = PHONE_PREFIX;
+            }
         }
 
         function finalPay() {
@@ -872,15 +1026,19 @@
             let phone = '';
             
             if (currentMethod !== 'stars') {
-                phone = document.getElementById('phoneInput').value.trim();
-                const digits = phone.replace(/\D/g, '');
-                if (digits.length < 10) {
-                    document.getElementById('phoneInput').style.borderColor = '#ff453a';
+                const phoneInput = document.getElementById('phoneInput');
+                const digits = getPhoneDigits(phoneInput.value);
+            
+                if (digits.length < PHONE_DIGITS_COUNT) {
+                    phoneInput.style.borderColor = '#ff453a';
                     document.getElementById('phoneError').style.display = 'block';
                     return;
                 }
+            
                 document.getElementById('phoneError').style.display = 'none';
-                document.getElementById('phoneInput').style.borderColor = 'rgba(255,255,255,0.2)';
+                phoneInput.style.borderColor = 'rgba(255,255,255,0.2)';
+            
+                phone = '7' + digits;
             }
         
             closeModal();
@@ -945,8 +1103,7 @@
                 UI.amountInput.value = Math.floor(parseFloat(UI.amountInput.value)) || '';
             }
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-            UI.amountInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-            UI.amountError.style.display = 'none';
+            hideAmountError();
             updateConversion();
         });
 
@@ -967,6 +1124,7 @@
         updateStars();
         renderPrices();
         updateConversion();
+        initPhoneMask();
     </script>
 </body>
 </html>
