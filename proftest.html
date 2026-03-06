@@ -240,7 +240,7 @@
         }
     </style>
 </head>
-<body>    
+<body>
     <canvas id="starCanvas"></canvas>
     <div class="overlay"></div>
 
@@ -254,7 +254,7 @@
     <div class="balance-card">
         <div class="label">Текущий баланс</div>
         <div class="balance-value">
-            <span id="balanceAmount">1,500</span>
+            <span id="balanceAmount">...</span>
             <img src="starxd.png" class="star-icon" alt="star">
         </div>
         <button class="btn-action" id="topUpButton">💳 Пополнить баланс</button>
@@ -269,13 +269,15 @@
             <div class="flame-inner"></div>
         </div>
         <div class="streak-label">Серия с пророком</div>
-        <div class="streak-count">12 Дней</div>
+        <div class="streak-count" id="streakCount">...</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
+
+        tg.BackButton.hide();
 
         /* --- АНИМАЦИЯ ЗВЕЗДНОГО ФОНА --- */
         const canvas = document.getElementById('starCanvas');
@@ -350,6 +352,19 @@
                 .catch(err => console.error('Баланс не загружен:', err));
         }
 
+        function loadStreak(user) {
+            fetch(`/user-streak/?user_id=${user.id}`)
+                .then(r => r.json())
+                .then(data => {
+                    const el = document.getElementById('streakCount');
+                    if (el) el.textContent = (data.streak || 0) + ' Дней';
+                })
+                .catch(() => {
+                    const el = document.getElementById('streakCount');
+                    if (el) el.textContent = '0 Дней';
+                });
+        }
+
         document.getElementById('topUpButton').addEventListener('click', () => {
             tg.HapticFeedback.impactOccurred('medium');
             window.location.href = 'https://stage-test.ai-prorok.webtm.ru/payment/';
@@ -359,23 +374,17 @@
         initStars();
         updateStars();
         function waitForUser(attempt = 0) {
-            const debug = document.getElementById('debug');
-            const tgExists = typeof window.Telegram !== 'undefined';
-            const webAppExists = tgExists && typeof window.Telegram.WebApp !== 'undefined';
-            const initData = tgExists && webAppExists ? tg.initData : 'NO_WEBAPP';
             const user = tg?.initDataUnsafe?.user;
-            
-            if (debug) {
-                debug.textContent = `[${attempt}] tg:${tgExists} | wa:${webAppExists} | initData:"${initData}" | user:${JSON.stringify(user)}`;
-            }
-            
             if (user) {
                 loadUser(user);
                 loadBalance(user);
+                loadStreak(user);
             } else if (attempt < 15) {
                 setTimeout(() => waitForUser(attempt + 1), 150);
             } else {
                 document.getElementById('userName').textContent = 'Пользователь';
+                document.getElementById('balanceAmount').textContent = '0';
+                document.getElementById('streakCount').textContent = '0';
             }
         }
         waitForUser();
