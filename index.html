@@ -5,10 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Гадание на картах Таро</title>
 
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
     <style>
+        :root {
+            --bg-color: #050507; /* Глубокий космический цвет из профиля */
+        }
+
         /* Базовые сбросы стилей */
         * {
             margin: 0;
@@ -27,11 +30,28 @@
             align-items: center;
             user-select: none;
             overflow: hidden;
-            background-image: url('card/IrF.gif');
-            background-size: cover;
-            background-position: center;
+            background-color: var(--bg-color); /* Убрали гифку, поставили цвет фона */
         }
 
+        /* --- СТИЛИ ДЛЯ ЗВЕЗДНОГО ФОНА --- */
+        #starCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, var(--bg-color) 90%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Прелоадер */
         #preloader {
           position: fixed;
           z-index: 9999;
@@ -54,19 +74,9 @@
         .preloader-image {
           width: 100%;
           height: 100%;
-          object-fit: cover; /* Растянуть, сохранив пропорции */
+          object-fit: cover;
         }
-<!--        мейби надпись-->
-<!--        .preloader-text {-->
-<!--          z-index: 2;-->
-<!--          color: white;-->
-<!--          font-size: 1.8rem;-->
-<!--          font-weight: bold;-->
-<!--          text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);-->
-<!--          padding: 20px;-->
-<!--          background: rgba(0, 0, 0, 0.4);-->
-<!--          border-radius: 10px;-->
-<!--        }-->
+
         /* Стили для текстовой подсказки */
         .prompt {
             color: white;
@@ -74,6 +84,7 @@
             margin-bottom: 20px;
             text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
             transition: opacity 0.5s ease;
+            z-index: 1;
         }
         .prompt.fade-out {
             opacity: 0;
@@ -87,12 +98,13 @@
             width: 90%;
             max-width: 600px;
             margin-bottom: 20px;
+            z-index: 1;
         }
 
         /* Обертка для карты */
         .card-wrapper {
             width: 100%;
-            aspect-ratio: 1.85/3; /* Соотношение сторон карты */
+            aspect-ratio: 1.85/3;
             transition: opacity 0.3s ease;
         }
 
@@ -166,76 +178,141 @@
             pointer-events: none;
         }
 
-        /* Стили кнопки */
+        /* === ВИДИМАЯ СТЕКЛЯННАЯ КНОПКА С ПЛАВНОЙ ПУЛЬСАЦИЕЙ === */
         .bubbly-button {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            display: inline-block;
-            font-size: 1.2em;
-            padding: 10px 20px;
-            
-            /* ИЗМЕНЕНИЯ ТУТ: Фиксируем кнопку внизу */
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 16px 28px;
+
             position: fixed;
-            bottom: 8%; /* Расстояние от нижнего края экрана */
+            bottom: 12%;
             left: 50%;
-            transform: translateX(-50%) translateY(20px); /* Центрируем и готовим к анимации появления */
-            
-            background-color: #555;
-            color: #fff;
-            border-radius: 15px;
-            border: none;
+            transform: translateX(-50%) translateY(30px);
+
+            /* Эффект матового стекла, сделанный чуть плотнее, чтобы было видно */
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.5); /* Блик сверху */
+
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6); /* Чтобы текст хорошо читался */
+            border-radius: 18px;
             cursor: pointer;
-            transition: all 0.5s ease;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
             opacity: 0;
             z-index: 20;
-            white-space: nowrap; /* Чтобы текст не переносился */
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+            -webkit-tap-highlight-color: transparent;
+
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
         .bubbly-button.visible {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+            /* Плавное и медленное "дыхание" */
+            animation: slowPulse 3.5s infinite ease-in-out;
         }
+
         .bubbly-button:active {
-            transform: translateX(-50%) scale(0.95);
-            background-color: #444;
+            transform: translateX(-50%) translateY(2px) scale(0.97) !important;
+            background: rgba(255, 255, 255, 0.2);
+            animation: none; /* При нажатии пульсация останавливается */
         }
-        
-        /* Анимация пульсации кнопки */
-        @keyframes pulse {
-            0%, 100% { 
-                box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); 
+
+        /* Медленная пульсация (размер + мягкое свечение) */
+        @keyframes slowPulse {
+            0%, 100% {
                 transform: translateX(-50%) scale(1);
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), 0 0 10px 0 rgba(255, 255, 255, 0.1);
             }
-            50% { 
-                box-shadow: 0 0 25px rgba(255, 255, 255, 0.9); 
-                transform: translateX(-50%) scale(1.03);
+            50% {
+                transform: translateX(-50%) scale(1.04);
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), 0 0 25px 0 rgba(255, 255, 255, 0.3);
             }
-        }
-        
-        .bubbly-button.animate {
-            animation: pulse 1.5s infinite;
         }
     </style>
 </head>
 <body>
-    <!-- Прелоадер -->
+    <canvas id="starCanvas"></canvas>
+    <div class="overlay"></div>
+
     <div id="preloader">
       <img src="card/preloader.gif" alt="Загрузка..." class="preloader-image">
     </div>
-    <!-- Элементы интерфейса -->
+
     <div class="prompt" id="prompt"></div>
     <div class="card-container" id="card-container"></div>
     <div class="selected-row" id="selected-row"></div>
-    <button class="bubbly-button" id="fateButton" disabled>🔮Узнать предначертанное🔮</button>
 
+    <button class="bubbly-button" id="fateButton" disabled>✨ Узнать предначертанное ✨</button>
 
+    <script>
+        /* --- АНИМАЦИЯ ЗВЕЗДНОГО ФОНА --- */
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let bgWidth, bgHeight, centerX, centerY;
+        let bgStars = [];
+        const STAR_COUNT = 8000;
+        const SPEED = 0.35;
 
-    <script>        
-        // Конфигурация приложения
+        function initStars() {
+            bgWidth = window.innerWidth;
+            bgHeight = window.innerHeight;
+            centerX = bgWidth / 2;
+            centerY = bgHeight / 2;
+            canvas.width = bgWidth;
+            canvas.height = bgHeight;
+
+            bgStars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                bgStars.push({
+                    x: Math.random() * bgWidth - centerX,
+                    y: Math.random() * bgHeight - centerY,
+                    z: Math.random() * bgWidth
+                });
+            }
+        }
+
+        function updateStars() {
+            ctx.clearRect(0, 0, bgWidth, bgHeight);
+            for (let i = 0; i < STAR_COUNT; i++) {
+                let s = bgStars[i];
+                s.z -= SPEED;
+                if (s.z <= 0) {
+                    s.z = bgWidth;
+                    s.x = Math.random() * bgWidth - centerX;
+                    s.y = Math.random() * bgHeight - centerY;
+                }
+                const pX = (s.x / s.z) * (bgWidth * 0.5) + centerX;
+                const pY = (s.y / s.z) * (bgHeight * 0.5) + centerY;
+                const size = (1 - s.z / bgWidth) * 2.2;
+                const opacity = (1 - s.z / bgWidth) * 0.8;
+
+                ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.beginPath();
+                ctx.arc(pX, pY, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            requestAnimationFrame(updateStars);
+        }
+
+        window.addEventListener('resize', initStars);
+        initStars();
+        updateStars();
+
+        /* --- ЛОГИКА ТАРО --- */
         const BASE = {
-            FLIP_DELAY: 300,      // Задержка перед свечением карты (мс)
-            PROMPT_FADE_DELAY: 500, // Задержка перед исчезновением подсказки (мс)
-            CARD_MOVE_DELAY: 100,  // Задержка перед началом движения карты (мс)
-            BUTTON_SHOW_DELAY: 300 // Задержка перед показом кнопки (мс)
+            FLIP_DELAY: 300,
+            PROMPT_FADE_DELAY: 500,
+            CARD_MOVE_DELAY: 100,
+            BUTTON_SHOW_DELAY: 300
         };
 
         const params = new URLSearchParams(location.search);
@@ -248,8 +325,6 @@
             ...BASE
         };
 
-        console.log("CONFIG =", CONFIG);
-
         const promptEl = document.getElementById('prompt');
 
         if (CONFIG.SELECT_CARDS === 1) {
@@ -261,28 +336,21 @@
         } else if (CONFIG.SELECT_CARDS === 7) {
           promptEl.textContent = 'Выберите 7 карт';
         }
-        
+
         window.addEventListener('load', () => {
           const preloader = document.getElementById('preloader');
-
-        // Делаем минимальную задержку — n секунды
           setTimeout(() => {
             preloader.classList.add('fade-out');
             setTimeout(() => {
               preloader.remove();
-            }, 600); // подождать завершения анимации скрытия
-          }, 3350); // ⏳ показываем минимум 2 секунды
+            }, 600);
+          }, 3350);
         });
 
-        // Инициализация при полной загрузке DOM
         document.addEventListener('DOMContentLoaded', () => {
             if (window.Telegram && window.Telegram.WebApp) {
-                console.log('Telegram.WebApp доступен');
-                Telegram.WebApp.expand();                        // Раскрываем на весь экран
-            } else {
-                console.warn('Telegram.WebApp недоступен');
+                Telegram.WebApp.expand();
             }
-
             initTarotApp();
         });
 
@@ -292,21 +360,19 @@
                 .then(data => {
                     const urlParams = new URLSearchParams(window.location.search);
                     const excludeParam = urlParams.get('exclude');
-                    
+
                     let filteredData = data;
-        
+
                     if (excludeParam) {
                         const excludeList = decodeURIComponent(excludeParam).split(',');
-                        console.log("Исключаем карты из колоды:", excludeList);
-        
                         filteredData = Object.fromEntries(
                             Object.entries(data).filter(([path, cardInfo]) => {
                                 return !excludeList.includes(cardInfo.title);
                             })
                         );
                     }
-                    
-                    const app = new TarotApp(data);
+
+                    const app = new TarotApp(filteredData);
                     app.init();
                     if (window.Telegram && Telegram.WebApp) {
                         Telegram.WebApp.ready();
@@ -315,9 +381,6 @@
                 .catch(error => console.error('Ошибка загрузки карт:', error));
         }
 
-        /**
-         * Класс приложения Таро
-         */
         class TarotApp {
             constructor(cardsData) {
                 this.cardsData = Object.entries(cardsData);
@@ -327,25 +390,17 @@
                 this.promptElement = document.getElementById('prompt');
                 this.fateButton = document.getElementById('fateButton');
 
-
                 this.clickCount = 0;
                 this.selectedCardsList = [];
                 this.animationCompleteCount = 0;
             }
 
-            /**
-             * Инициализация приложения
-             */
             init() {
                 this.setupSelectedCardSlots();
                 this.renderCards();
                 this.setupButtonHandler();
             }
 
-
-            /**
-             * Создает слоты для выбранных карт
-             */
             setupSelectedCardSlots() {
                 for (let i = 0; i < CONFIG.SELECT_CARDS; i++) {
                     const wrapper = document.createElement('div');
@@ -355,9 +410,6 @@
                 }
             }
 
-            /**
-             * цРендерит карты на странице
-             */
             renderCards() {
                 const selectedCards = this.getRandomCards(this.cardsData, CONFIG.TOTAL_CARDS);
                 this.currentCards = selectedCards;
@@ -374,14 +426,10 @@
                     wrapper.appendChild(cardElement);
                     this.cardContainer.appendChild(wrapper);
 
-                    // Обработчик клика на карту
                     wrapper.addEventListener('click', () => this.handleCardClick(cardElement, wrapper));
                 });
             }
 
-            /**
-             * Создает обертку для карты
-             */
             createCardWrapper() {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'card-wrapper';
@@ -389,9 +437,6 @@
                 return wrapper;
             }
 
-            /**
-             * Создает элемент карты
-             */
             createCardElement(index) {
                 const cardElement = document.createElement('div');
                 cardElement.className = 'card';
@@ -399,9 +444,6 @@
                 return cardElement;
             }
 
-            /**
-             * Создает лицевую сторону карты
-             */
             createCardFront(imageUrl) {
                 const cardFront = document.createElement('div');
                 cardFront.className = 'card-front';
@@ -409,18 +451,12 @@
                 return cardFront;
             }
 
-            /**
-             * Создает обратную сторону карты
-             */
             createCardBack() {
                 const cardBack = document.createElement('div');
                 cardBack.className = 'card-back';
                 return cardBack;
             }
 
-            /**
-             * Обработчик клика на карту
-             */
             handleCardClick(card, wrapper) {
                 if (!card.classList.contains('flipped') && this.clickCount < CONFIG.SELECT_CARDS) {
                     card.classList.add('flipped');
@@ -433,9 +469,9 @@
                     const idx = Number(card.dataset.index);
                     const [image_path, data] = this.currentCards[idx];
                     this.selectedCardsList.push({
-                        card,                // сам <div class="card">
-                        wrapper,             // его обёртка <div class="card-wrapper">
-                        title: data.title,   // для передачи боту
+                        card,
+                        wrapper,
+                        title: data.title,
                         meaning: data.meaning,
                         chain_meaning: data.chain_meaning,
                         image_path
@@ -450,18 +486,12 @@
                 }
             }
 
-            /**
-             * Перемещает выбранные карты в ряд
-             */
             moveSelectedCards() {
                 this.hideUnselectedCards();
                 this.prepareTargetSlots();
                 this.animateCardsMovement();
             }
 
-            /**
-             * Скрывает невыбранные карты
-             */
             hideUnselectedCards() {
                 const allWrappers = document.querySelectorAll('.card-wrapper');
                 allWrappers.forEach(wrapper => {
@@ -472,9 +502,6 @@
                 });
             }
 
-            /**
-             * Подготавливает слоты для выбранных карт
-             */
             prepareTargetSlots() {
                 const targetWrappers = document.querySelectorAll('.selected-card-wrapper');
                 targetWrappers.forEach(wrapper => {
@@ -483,32 +510,23 @@
                 });
             }
 
-            /**
-             * Анимирует перемещение карт
-             */
             animateCardsMovement() {
                 this.selectedCardsList.forEach(({card, wrapper}, index) => {
                     const targetWrapper = document.querySelectorAll('.selected-card-wrapper')[index];
                     const cardRect = card.getBoundingClientRect();
                     const targetRect = targetWrapper.getBoundingClientRect();
 
-                    // Создаем летающую карту для анимации
                     const flyingCard = this.createFlyingCard(card, cardRect);
                     document.body.appendChild(flyingCard);
 
-                    // Скрываем оригинальную карту
                     wrapper.style.opacity = '0';
 
-                    // Запускаем анимацию перемещения
                     setTimeout(() => {
                         this.animateCardMovement(flyingCard, targetRect, targetWrapper, card);
                     }, CONFIG.CARD_MOVE_DELAY);
                 });
             }
 
-            /**
-             * Создает карту для анимации перемещения
-             */
             createFlyingCard(card, cardRect) {
                 const flyingCard = card.cloneNode(true);
                 flyingCard.className = 'card flipped card-flipped-glow flying-card';
@@ -519,27 +537,18 @@
                 return flyingCard;
             }
 
-            /**
-             * Анимирует перемещение карты в целевой слот
-             */
             animateCardMovement(flyingCard, targetRect, targetWrapper, originalCard) {
                 flyingCard.style.left = `${targetRect.left}px`;
                 flyingCard.style.top = `${targetRect.top}px`;
                 flyingCard.style.width = `${targetRect.width}px`;
                 flyingCard.style.height = `${targetRect.height}px`;
 
-                // После завершения анимации
                 setTimeout(() => {
                     this.finalizeCardMovement(flyingCard, targetWrapper, originalCard);
                 }, 750);
             }
 
-            /**
-             * Завершает перемещение карты
-             */
             finalizeCardMovement(targetWrapper, originalCard) {
-
-                // Создаем финальную карту в целевом положении
                 const finalCard = originalCard.cloneNode(true);
                 finalCard.className = 'card flipped card-flipped-glow';
                 targetWrapper.appendChild(finalCard);
@@ -547,7 +556,6 @@
 
                 this.animationCompleteCount++;
 
-                // Показываем кнопку после перемещения всех карт
                 if (this.animationCompleteCount === CONFIG.SELECT_CARDS) {
                     setTimeout(() => {
                         this.showFateButton();
@@ -555,34 +563,25 @@
                 }
             }
 
-            /**
-             * Показывает кнопку "Узнать предначертанное"
-             */
             showFateButton() {
-                this.fateButton.disabled = false;               // убираем блокировку
+                this.fateButton.disabled = false;
                 this.fateButton.style.pointerEvents = 'auto';
-                this.fateButton.classList.add('visible', 'animate');
+                this.fateButton.classList.add('visible');
             }
 
-            /**
-             * Настраивает обработчик клика на кнопку
-             */
             setupButtonHandler() {
               this.fateButton.addEventListener('click', () => {
                 this.fateButton.disabled = true;
                 this.fateButton.style.pointerEvents = 'none';
-                this.fateButton.classList.remove('animate');
-                // Собираем все выбранные заголовки
+
                 const selectedTitles = this.selectedCardsList.map(c => c.title);
 
-                // Формируем payload, фильтруя chain_meaning
                 const payload = {
                   user_id: Telegram.WebApp.initDataUnsafe.user?.id,
                   selectedCards: this.selectedCardsList.map(c => {
                     const { title, meaning, chain_meaning, image_path } = c;
                     let filteredChain = {};
 
-                    // Если поле есть, оставляем только сведения о выбранных картах
                     if (chain_meaning && typeof chain_meaning === 'object') {
                       selectedTitles.forEach(sel => {
                         if (chain_meaning.hasOwnProperty(sel)) {
@@ -594,20 +593,18 @@
                     return {
                       title,
                       meaning,
-                      // Если после фильтрации ничего не осталось, можно опустить поле
                       ...(Object.keys(filteredChain).length && { chain_meaning: filteredChain }),
                       image_path
                     };
                   })
                 };
 
-                const apiBase = window.location.origin;  // будет https://stage.ai-prorok.webtm.ru или https://stage-test.ai-prorok.webtm.ru
+                const apiBase = window.location.origin;
 
                 fetch(`${apiBase}/webapp-data/`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(payload),
-                    // для same-origin CORS не нужен, но можно оставить
                     credentials: 'include'
                 })
                     .then(res => res.json())
@@ -622,11 +619,12 @@
               },{ once: true });
             }
 
-            /**
-             * Возвращает случайные карты из колоды
-             */
             getRandomCards(cards, count) {
-                const shuffled = [...cards].sort(() => Math.random() - 0.5);
+                const shuffled = [...cards];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
                 return shuffled.slice(0, count);
             }
         }
