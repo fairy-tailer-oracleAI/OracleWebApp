@@ -430,7 +430,7 @@
 
         <div class="input-section">
             <div class="input-wrapper">
-                <input type="number" id="amountInput" value="300" placeholder="100" inputmode="numeric">
+                <input type="number" id="amountInput" value="300" placeholder="100" inputmode="numeric" step="1" min="100">
                 <div id="currencySuffix" class="currency-suffix">₽</div>
             </div>
 
@@ -474,7 +474,7 @@
 
             <div class="confirm-row" id="emailRow">
                 <div class="confirm-label">Ваш email для отправки чека:</div>
-                <input type="email" id="emailInput" placeholder="example@mail.ru" style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2); text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;">
+                <input type="text" id="emailInput" placeholder="example@mail.ru" style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2); text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;">
                 <div id="emailError">Укажите email для отправки чека</div>
             </div>
 
@@ -551,6 +551,18 @@
         tg.expand();
         tg.ready();
 
+        tg.BackButton.show();
+        tg.BackButton.onClick(() => {
+            window.location.href = 'https://stage-test.ai-prorok.webtm.ru/profile/';
+        });
+
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) {
+                // Страница восстановлена из кэша (вернулись с ЮКассы)
+                document.getElementById('loaderScreen').style.display = 'none';
+            }
+        });
+        
         const userId = tg.initDataUnsafe?.user?.id;
 
         if (userId) {
@@ -567,6 +579,15 @@
                     }
                 })
                 .catch(err => console.error("Ошибка загрузки FOMO:", err));
+            
+            fetch(`/user-email/?user_id=${userId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.email) {
+                        UI.emailInput.value = data.email;
+                    }
+                })
+                .catch(err => console.error('Email не загружен:', err));
         }
 
         document.addEventListener('touchstart', (e) => {
@@ -793,13 +814,14 @@
 
             // ПРОВЕРКА НА МИН. СУММУ (100)
             const amount = parseFloat(UI.amountInput.value) || 0;
-            if (amount < 100) {
+            const minAmount = devMode ? 1 : 100;
+            if (amount < minAmount) {
                 UI.amountInput.style.borderColor = 'rgba(255, 59, 48, 0.5)'; // Мягкая красная рамка
 
                 if (currentMethod === 'card') {
                     UI.amountError.innerHTML = 'Минимальная сумма - 100 ₽';
                 } else {
-                    UI.amountError.innerHTML = 'Минимальная сумма - 100 <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
+                    UI.amountError.innerHTML = 'Минимальная сумма - 100 ₽ <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
                 }
 
                 UI.amountError.style.display = 'block';
@@ -836,13 +858,14 @@
             UI.emailInput.blur();
 
             if (currentMethod === 'card') {
-                email = UI.emailInput.value;
-                if (!email.includes('@')) {
+                email = UI.emailInput.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+                if (!emailRegex.test(email)) {
                     UI.emailInput.style.borderColor = '#ff453a';
+                    UI.emailError.textContent = 'Введите корректный email';
                     UI.emailError.style.display = 'block';
                     return;
                 }
-
                 UI.emailError.style.display = 'none';
                 UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
             }
@@ -882,6 +905,8 @@
                     else if (currentMethod === 'card') {
                         if (data.url) {
                             tg.openLink(data.url);
+
+                            document.getElementById('loaderScreen').style.display = 'none';
                             UI.successScreen.style.display = 'flex';
                         } else {
                             tg.showAlert("Ошибка: Сервер не вернул ссылку на оплату.");
@@ -910,12 +935,29 @@
 
         // НОВОЕ: Прячем ошибку, как только юзер начинает сам вводить новую сумму
         UI.amountInput.addEventListener('input', () => {
+            // Убираем дробную часть
+            if (UI.amountInput.value.includes('.') || UI.amountInput.value.includes(',')) {
+                UI.amountInput.value = Math.floor(parseFloat(UI.amountInput.value)) || '';
+            }
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
             UI.amountInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
             UI.amountError.style.display = 'none';
             updateConversion();
         });
 
+        let devClicks = 0;
+        let devMode = false;
+        
+        document.querySelector('.label').addEventListener('click', () => {
+            devClicks++;
+            if (devClicks >= 5) {
+                devMode = true;
+                devClicks = 0;
+                tg.HapticFeedback.impactOccurred('heavy');
+                document.querySelector('.label').textContent = 'Услуги и цены 🛠️';
+            }
+        });
+        
         initStars();
         updateStars();
         renderPrices();
