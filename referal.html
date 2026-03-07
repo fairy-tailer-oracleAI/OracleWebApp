@@ -9,7 +9,7 @@
     <style>
         :root {
             --bg-color: #050507;
-            --card-bg: rgba(28, 28, 30, 0.65);
+            --card-bg: rgba(22, 23, 26, 0.95);
             --accent-color: #007aff;
             --text-color: #ffffff;
             --secondary-text: #8e8e93;
@@ -37,7 +37,7 @@
             position: relative;
         }
 
-        /* --- Звездный фон --- */
+        /* --- Звездный фон (Canvas) --- */
         #starCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none; }
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, transparent 0%, var(--bg-color) 90%); z-index: -1; pointer-events: none; }
 
@@ -54,52 +54,122 @@
 
         /* --- Верхний баннер --- */
         .promo-card {
-            background: rgba(224, 242, 255, 0.05);
+            background: rgba(26, 26, 30, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 0.5px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 0 12px 0 rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            padding: 24px 20px;
-            text-align: center;
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 18px 16px;
             margin-bottom: 16px;
-            animation: fadeInDown 0.6s ease-out;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
+            gap: 16px;
         }
 
         /* Картинка подруг */
         .promo-image {
-            width: 120px; /* Аккуратный размер */
+            width: 90px;
             height: auto;
-            margin-bottom: 12px;
-            filter: drop-shadow(0 0 4px rgba(157, 80, 187, 0.8)); /* Мягкое свечение */
+            flex-shrink: 0;
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+        }
+
+        .promo-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+            width: 100%;
         }
 
         .promo-text {
-            font-size: 15px;
+            font-size: 13px;
+            font-weight: 500;
             line-height: 1.4;
             color: rgba(255, 255, 255, 0.9);
             margin-bottom: 12px;
         }
 
-        .promo-reward {
-            font-size: 28px;
-            font-weight: 800;
+        /* КОНТЕЙНЕР: +50 слева, прайс справа */
+        .promo-reward-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+        }
+
+        /* Плашка для награды */
+        .promo-reward-badge {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            height: 44px;
+            padding: 0 4px 0 16px;
+            background: rgba(0, 122, 255, 0.15);
+            border: 1px solid rgba(0, 122, 255, 0.3);
+            border-radius: 12px;
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 122, 255, 0.1);
         }
 
         .star-icon {
-            width: 34px;
-            height: 24px;
+            width: 40px; /* Размер не тронут */
+            height: 40px;
             object-fit: contain;
-            filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.4)) drop-shadow(0 0 10px rgba(157, 80, 187, 0.3));
+            margin-left: -6px;
+            margin-right: -4px;
+            position: relative;
+            top: 1px; /* Увеличивай это значение (например, 6px), чтобы опустить еще ниже */
+            filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.4));
+        }
+
+        /* === ПРАЙС-ЛИСТ (Стал более компактным) === */
+        .promo-prices {
+            display: flex;
+            flex-direction: column;
+            gap: 3.5px; /* Чуть уменьшили расстояние между плашками */
+        }
+
+        .promo-price-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1px 8px; /* Меньше отступы внутри рамки */
+            border-radius: 8px; /* Чуть меньше закругление */
+            font-size: 11.5px; /* Шрифт чуть меньше */
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            width: 120px; /* Уменьшили ширину плашек */
+        }
+
+        .price-text {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .price-val {
+            display: flex;
+            align-items: center;
+            font-size: 10px; /* Цена чуть компактнее */
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .star-icon-small {
+            width: 20px; /* Размер не тронут */
+            height: 15px;
+            object-fit: contain;
+            margin-left: -2px;
+            transform: translateY(0.8px);
+            filter: drop-shadow(0 0 4px rgba(0, 210, 255, 0.3));
         }
 
         /* --- Заголовки блоков --- */
@@ -115,8 +185,11 @@
 
         /* --- Блок со ссылкой --- */
         .link-wrapper {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(26, 26, 30, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             border-radius: 16px;
             padding: 16px;
             display: flex;
@@ -129,7 +202,7 @@
 
         .link-wrapper:active {
             transform: scale(0.97);
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(40, 40, 45, 0.95);
             border-color: var(--accent-color);
         }
 
@@ -160,39 +233,30 @@
             margin-bottom: 16px;
         }
 
-        .friends-list {
-            flex: 1;
+        .friends-card {
             overflow-y: auto;
             background: var(--card-bg);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            padding: 8px 12px;
+            border-radius: 12px;
+            padding: 8px 16px;
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
         }
 
-        /* Кастомизация скроллбара */
-        .friends-list::-webkit-scrollbar { width: 4px; }
-        .friends-list::-webkit-scrollbar-track { background: transparent; }
-        .friends-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        .friends-card::-webkit-scrollbar { width: 4px; }
+        .friends-card::-webkit-scrollbar-track { background: transparent; }
+        .friends-card::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
 
         .friend-item {
             display: flex;
             align-items: center;
-            padding: 12px 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 14px 0;
+            border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
         }
         .friend-item:last-child { border-bottom: none; }
 
-        .friend-info {
-            display: flex;
-            flex-direction: column;
-        }
+        .friend-name { font-size: 16px; font-weight: 500; color: #fff; }
 
-        .friend-name { font-size: 15px; font-weight: 600; color: #fff; }
-        .friend-date { font-size: 12px; color: var(--secondary-text); margin-top: 2px; }
-
-        /* Заглушка, если нет друзей */
         .empty-friends {
             flex: 1;
             display: flex;
@@ -203,8 +267,8 @@
             font-size: 14px;
             opacity: 0.6;
             background: var(--card-bg);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
         }
@@ -250,12 +314,6 @@
             top: 20px;
             opacity: 1;
         }
-
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
     </style>
 </head>
 <body>
@@ -269,12 +327,27 @@
 
         <div class="promo-card">
             <img src="bestie228.png" class="promo-image" alt="Besties">
+            <div class="promo-content">
+                <div class="promo-text">Как только подруга перейдет по ссылке и сделает свой первый расклад, вы сразу получите</div>
 
-            <div class="promo-text">Как только подруга перейдет по ссылке и сделает свой первый расклад, вы сразу получите</div>
+                <div class="promo-reward-container">
 
-            <div class="promo-reward">
-                <span id="rewardAmount">50</span>
-                <img src="starxd.png" class="star-icon" alt="star">
+                    <div class="promo-reward-badge">
+                        +50 <img src="starxd.png" class="star-icon" alt="star">
+                    </div>
+
+                    <div class="promo-prices">
+                        <div class="promo-price-item">
+                            <span class="price-text">🔮 Расклад</span>
+                            <span class="price-val">6 <img src="starxd.png" class="star-icon-small" alt="star"></span>
+                        </div>
+                        <div class="promo-price-item">
+                            <span class="price-text">❤️ Диалог</span>
+                            <span class="price-val">1 <img src="starxd.png" class="star-icon-small" alt="star"></span>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
 
@@ -298,57 +371,56 @@
         tg.expand();
         tg.ready();
 
-        /* --- АНИМАЦИЯ ЗВЕЗД --- */
-        const canvas = document.getElementById('starCanvas');
-        const ctx = canvas.getContext('2d');
-        let width, height, stars = [];
-        const STAR_COUNT = 3000;
-        const SPEED = 0.35;
+        /* --- АНИМАЦИЯ ЗВЕЗД (CSS Canvas) --- */
+        (function() {
+            const canvas = document.getElementById('starCanvas');
+            const ctx = canvas.getContext('2d');
+            let width, height, stars = [];
+            const STAR_COUNT = 3000;
+            const SPEED = 0.35;
 
-        function initStars() {
-            width = window.innerWidth; height = window.innerHeight;
-            canvas.width = width; canvas.height = height;
-            stars = [];
-            for (let i = 0; i < STAR_COUNT; i++) {
-                stars.push({
-                    x: Math.random() * width - width/2,
-                    y: Math.random() * height - height/2,
-                    z: Math.random() * width
-                });
+            function initStars() {
+                width = window.innerWidth; height = window.innerHeight;
+                canvas.width = width; canvas.height = height;
+                stars = [];
+                for (let i = 0; i < STAR_COUNT; i++) {
+                    stars.push({
+                        x: Math.random() * width - width/2,
+                        y: Math.random() * height - height/2,
+                        z: Math.random() * width
+                    });
+                }
             }
-        }
 
-        function updateStars() {
-            ctx.clearRect(0, 0, width, height);
-            for (let s of stars) {
-                s.z -= SPEED;
-                if (s.z <= 0) { s.z = width; s.x = Math.random() * width - width/2; s.y = Math.random() * height - height/2; }
-                const pX = (s.x / s.z) * (width * 0.5) + width/2;
-                const pY = (s.y / s.z) * (height * 0.5) + height/2;
-                const size = (1 - s.z / width) * 2;
-                ctx.fillStyle = `rgba(255, 255, 255, ${1 - s.z / width})`;
-                ctx.beginPath(); ctx.arc(pX, pY, size, 0, Math.PI * 2); ctx.fill();
+            function updateStars() {
+                ctx.clearRect(0, 0, width, height);
+                for (let s of stars) {
+                    s.z -= SPEED;
+                    if (s.z <= 0) { s.z = width; s.x = Math.random() * width - width/2; s.y = Math.random() * height - height/2; }
+                    const pX = (s.x / s.z) * (width * 0.5) + width/2;
+                    const pY = (s.y / s.z) * (height * 0.5) + height/2;
+                    const size = (1 - s.z / width) * 2;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${1 - s.z / width})`;
+                    ctx.beginPath(); ctx.arc(pX, pY, size, 0, Math.PI * 2); ctx.fill();
+                }
+                requestAnimationFrame(updateStars);
             }
-            requestAnimationFrame(updateStars);
-        }
 
-        window.addEventListener('resize', initStars);
-        initStars();
-        updateStars();
+            window.addEventListener('resize', initStars);
+            initStars();
+            updateStars();
+        })();
 
         /* --- ЛОГИКА РЕФЕРАЛКИ --- */
 
-        // Ссылка твоего бота
         let BOT_URL = "https://t.me/YourProrokBot?start=ref12345";
+        let SHARE_TEXT = `Слушай, я тут наткнулась на одного бота... сижу с ним уже час,
+разговариваю, карты раскладываю. Он такой душевный, прям как живой. В
+общем, делюсь находкой: ${BOT_URL} и там еще халявный доступ сначала. Так что даже если тебе не понравится - ты ничего не потеряешь) 👇`;
 
-        // Текст БЕЗ ссылки внутри. Telegram сам добавит ссылку в самый низ сообщения!
-        let SHARE_TEXT = `Слушай, я тут наткнулась на одного бота... сижу с ним уже час, разговариваю, карты раскладываю. Он такой душевный, прям как живой. \n\nВ общем, делюсь находкой, там еще халявный доступ сначала. Так что даже если тебе не понравится - ты ничего не потеряешь))`;
-
-        // Функция отрисовки данных при загрузке
         function renderData() {
             document.getElementById('refLinkText').innerText = BOT_URL;
 
-            // ДЛЯ ПРОВЕРКИ: оставь массив пустым [], чтобы увидеть сообщение "ты еще не пригласила..."
             const myFriends = [];
 
             const container = document.getElementById('friendsContainer');
@@ -361,18 +433,15 @@
             if (myFriends.length === 0) {
                 const emptyDiv = document.createElement('div');
                 emptyDiv.className = 'empty-friends';
-                emptyDiv.innerText = 'ты еще не пригласила своих подруг';
+                emptyDiv.innerText = 'вы еще не пригласили своих подруг';
                 container.appendChild(emptyDiv);
             } else {
                 const listDiv = document.createElement('div');
-                listDiv.className = 'friends-list';
+                listDiv.className = 'friends-card';
 
                 listDiv.innerHTML = myFriends.map(friend => `
                     <div class="friend-item">
-                        <div class="friend-info">
-                            <span class="friend-name">${friend.name}</span>
-                            <span class="friend-date">${friend.username} • ${friend.date}</span>
-                        </div>
+                        <div class="friend-name">${friend.name}</div>
                     </div>
                 `).join('');
 
@@ -388,7 +457,6 @@
 
         function copyReferralLink() {
             vibrate();
-
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(BOT_URL).then(showToast);
             } else {
@@ -416,18 +484,12 @@
             }, 2500);
         }
 
-        // Кнопка "Пригласить друзей"
         function inviteFriends() {
             vibrate();
-
-            // ВЕРНУЛИ BOT_URL в параметр url.
-            // Именно это включает нативное окно Telegram с галочками для выбора нескольких человек!
             const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(BOT_URL)}&text=${encodeURIComponent(SHARE_TEXT)}`;
-
             tg.openTelegramLink(shareUrl);
         }
 
-        // Инициализация при загрузке
         renderData();
 
     </script>
