@@ -341,36 +341,29 @@
         // Ссылка твоего бота
         let BOT_URL = "https://t.me/YourProrokBot?start=ref12345";
 
-        // Новый текст с переносами строк
-        let SHARE_TEXT = `Слушай, я тут наткнулась на одного бота... сижу с ним уже час,
-разговариваю, карты раскладываю. Он такой душевный, прям как живой. В
-общем, делюсь находкой: ${BOT_URL} и там еще халявный доступ сначала. Так что даже если тебе не понравится - ты ничего не потеряешь)`;
+        // Текст БЕЗ ссылки внутри. Telegram сам добавит ссылку в самый низ сообщения!
+        let SHARE_TEXT = `Слушай, я тут наткнулась на одного бота... сижу с ним уже час, разговариваю, карты раскладываю. Он такой душевный, прям как живой. \n\nВ общем, делюсь находкой, там еще халявный доступ сначала. Так что даже если тебе не понравится - ты ничего не потеряешь))`;
 
         // Функция отрисовки данных при загрузке
         function renderData() {
             document.getElementById('refLinkText').innerText = BOT_URL;
 
             // ДЛЯ ПРОВЕРКИ: оставь массив пустым [], чтобы увидеть сообщение "ты еще не пригласила..."
-            // Или заполни его данными, чтобы увидеть список:
-            const myFriends = [{ name: "Алексей", username: "@alex_i", date: "Сегодня" }];
-
+            const myFriends = [];
 
             const container = document.getElementById('friendsContainer');
             document.getElementById('friendsCount').innerText = myFriends.length;
 
-            // Удаляем старый контент (кроме заголовка section-label)
             const label = container.querySelector('.section-label');
             container.innerHTML = '';
             container.appendChild(label);
 
             if (myFriends.length === 0) {
-                // Если массив пустой, создаем плашку с текстом
                 const emptyDiv = document.createElement('div');
                 emptyDiv.className = 'empty-friends';
                 emptyDiv.innerText = 'ты еще не пригласила своих подруг';
                 container.appendChild(emptyDiv);
             } else {
-                // Если есть друзья, создаем список без аватарок
                 const listDiv = document.createElement('div');
                 listDiv.className = 'friends-list';
 
@@ -387,14 +380,12 @@
             }
         }
 
-        // Вызов вибрации
         function vibrate() {
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('light');
             }
         }
 
-        // Копирование ссылки
         function copyReferralLink() {
             vibrate();
 
@@ -412,14 +403,11 @@
                 try {
                     document.execCommand('copy');
                     showToast();
-                } catch (error) {
-                    console.error('Ошибка копирования', error);
-                }
+                } catch (error) {}
                 textArea.remove();
             }
         }
 
-        // Показ уведомления
         function showToast() {
             const toast = document.getElementById('toast');
             toast.classList.add('show');
@@ -431,8 +419,11 @@
         // Кнопка "Пригласить друзей"
         function inviteFriends() {
             vibrate();
-            // URL пустой, так как ссылка уже в самом тексте
-            const shareUrl = `https://t.me/share/url?url=&text=${encodeURIComponent(SHARE_TEXT)}`;
+
+            // ВЕРНУЛИ BOT_URL в параметр url.
+            // Именно это включает нативное окно Telegram с галочками для выбора нескольких человек!
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(BOT_URL)}&text=${encodeURIComponent(SHARE_TEXT)}`;
+
             tg.openTelegramLink(shareUrl);
         }
 
