@@ -464,19 +464,41 @@
             </div>
 
             <!-- Email для чека (скрывается при Stars) -->
-            <div class="confirm-row" id="emailRow">
-                <div class="confirm-label">Email для отправки чека:</div>
-                <input
-                    type="email"
-                    id="emailInput"
-                    placeholder="example@mail.ru"
-                    inputmode="email"
-                    autocomplete="email"
-                    style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2);
-                    text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;"
-                >
-                <div id="emailError" style="color:#ff6b6b; font-size:12px; margin-top:6px; display:none; text-align:center; font-weight:500;">
-                    Введите корректный email
+            <!-- Кнопка "Нужен чек" + скрытое поле email -->
+            <div class="confirm-row" id="receiptRow">
+                <button id="receiptToggleBtn" onclick="toggleReceiptField()" style="
+                    width: 100%;
+                    background: rgba(255, 255, 255, 0.06);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
+                    border-radius: 14px;
+                    padding: 14px;
+                    color: rgba(255,255,255,0.7);
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    touch-action: manipulation;
+                ">
+                    🧾 Нужен чек
+                </button>
+            
+                <div id="emailRow" style="display: none; flex-direction: column; gap: 6px; width: 100%; margin-top: 10px;">
+                    <input
+                        type="email"
+                        id="emailInput"
+                        placeholder="example@mail.ru"
+                        inputmode="email"
+                        autocomplete="email"
+                        style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2);
+                        text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;"
+                    >
+                    <div id="emailError" style="color:#ff6b6b; font-size:12px; display:none; text-align:center; font-weight:500;">
+                        Введите корректный email
+                    </div>
                 </div>
             </div>
 
@@ -645,6 +667,32 @@
         const SERVICES = [{ name: "🔮 Расклад", cost: 6 }, { name: "❤️ Диалог", cost: 1 }];
         let timerInterval = null;
         let sparksInterval = null;
+        let receiptRequested = false;
+
+        function toggleReceiptField() {
+            vibrate();
+            receiptRequested = !receiptRequested;
+            const emailRow = document.getElementById('emailRow');
+            const btn = document.getElementById('receiptToggleBtn');
+        
+            if (receiptRequested) {
+                emailRow.style.display = 'flex';
+                btn.style.background = 'rgba(0, 122, 255, 0.15)';
+                btn.style.borderColor = 'rgba(0, 122, 255, 0.5)';
+                btn.style.color = '#fff';
+                btn.innerHTML = '✅ Чек на email';
+                // Фокус на поле с небольшой задержкой
+                setTimeout(() => document.getElementById('emailInput').focus(), 100);
+            } else {
+                emailRow.style.display = 'none';
+                btn.style.background = 'rgba(255, 255, 255, 0.06)';
+                btn.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                btn.style.color = 'rgba(255,255,255,0.7)';
+                btn.innerHTML = '🧾 Нужен чек';
+                document.getElementById('emailInput').value = '';
+                document.getElementById('emailError').style.display = 'none';
+            }
+        }
 
         fetch('/payment-settings/')
             .then(r => r.json())
@@ -836,13 +884,21 @@
 
             if (currentMethod === 'stars') {
                 UI.modalAmount.innerHTML = `${UI.amountInput.value} <img src="star.png" class="suffix-icon-no-glow" alt="star">`;
-                // Скрываем поле email для Telegram Stars
-                document.getElementById('emailRow').style.setProperty('display', 'none', 'important');
+                document.getElementById('receiptRow').style.setProperty('display', 'none', 'important');
             } else {
                 UI.modalAmount.textContent = `${UI.amountInput.value} ₽`;
-                // Показываем поле email для карты/СБП
-                document.getElementById('emailRow').style.setProperty('display', 'flex', 'important');
+                document.getElementById('receiptRow').style.setProperty('display', 'flex', 'important');
             }
+            // Сбрасываем состояние кнопки при каждом открытии модалки
+            receiptRequested = false;
+            document.getElementById('emailRow').style.display = 'none';
+            document.getElementById('receiptToggleBtn').style.cssText = `
+                width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+                border-radius:14px; padding:14px; color:rgba(255,255,255,0.7); font-size:14px;
+                font-weight:600; cursor:pointer; display:flex; align-items:center;
+                justify-content:center; gap:8px; touch-action:manipulation;
+            `;
+            document.getElementById('receiptToggleBtn').innerHTML = '🧾 Нужен чек';
 
             UI.modalOverlay.style.display = 'flex';
         }
@@ -851,6 +907,8 @@
             vibrate();
             document.getElementById('emailInput').blur();
             UI.modalOverlay.style.display = 'none';
+            receiptRequested = false;
+            document.getElementById('emailRow').style.display = 'none';
             document.getElementById('emailError').style.display = 'none';
             document.getElementById('emailInput').style.borderColor = 'rgba(255,255,255,0.2)';
         }
@@ -860,7 +918,7 @@
             let email = '';
 
             // Валидируем email только для карты/СБП
-            if (currentMethod !== 'stars') {
+            if (currentMethod !== 'stars' && receiptRequested) {
                 email = document.getElementById('emailInput').value.trim();
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
                 if (!emailRegex.test(email)) {
