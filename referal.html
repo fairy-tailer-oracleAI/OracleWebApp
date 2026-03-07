@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Партнерская программа</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #050507;
+            --card-bg: rgba(28, 28, 30, 0.65);
+            --accent-color: #007aff;
+            --text-color: #ffffff;
+            --secondary-text: #8e8e93;
+            --cosmic-primary: #00d2ff;
+            --cosmic-secondary: #9d50bb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            color: var(--text-color);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- Звездный фон --- */
+        #starCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, transparent 0%, var(--bg-color) 90%); z-index: -1; pointer-events: none; }
+
+        /* --- Контейнер контента --- */
+        .main-container {
+            width: 100%;
+            max-width: 380px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+            padding-bottom: 20px;
+        }
+
+        /* --- Верхний баннер --- */
+        .promo-card {
+            background: rgba(224, 242, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 0 12px 0 rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 24px 20px;
+            text-align: center;
+            margin-bottom: 16px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .promo-text {
+            font-size: 15px;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 12px;
+        }
+
+        .promo-reward {
+            font-size: 28px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .star-icon {
+            width: 34px;
+            height: 24px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.4)) drop-shadow(0 0 10px rgba(157, 80, 187, 0.3));
+        }
+
+        /* --- Заголовки блоков --- */
+        .section-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--secondary-text);
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding-left: 4px;
+        }
+
+        /* --- Блок со ссылкой --- */
+        .link-wrapper {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .link-wrapper:active {
+            transform: scale(0.97);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent-color);
+        }
+
+        .link-text {
+            font-size: 15px;
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: monospace;
+            opacity: 0.9;
+        }
+
+        .copy-icon {
+            width: 22px;
+            height: 22px;
+            fill: var(--accent-color);
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+
+        /* --- Список друзей --- */
+        .friends-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Чтобы скроллился только список внутри */
+            margin-bottom: 16px;
+        }
+
+        .friends-list {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 8px 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Кастомизация скроллбара */
+        .friends-list::-webkit-scrollbar { width: 4px; }
+        .friends-list::-webkit-scrollbar-track { background: transparent; }
+        .friends-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+
+        .friend-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .friend-item:last-child { border-bottom: none; }
+
+        .friend-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--cosmic-primary), var(--cosmic-secondary));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 700;
+            margin-right: 12px;
+            color: #fff;
+        }
+
+        .friend-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .friend-name { font-size: 15px; font-weight: 600; color: #fff; }
+        .friend-date { font-size: 12px; color: var(--secondary-text); margin-top: 2px; }
+
+        /* Заглушка, если нет друзей */
+        .empty-friends {
+            text-align: center;
+            color: var(--secondary-text);
+            font-size: 14px;
+            margin-top: 30px;
+            opacity: 0.6;
+        }
+
+        /* --- Кнопка действия --- */
+        .invite-btn {
+            width: 100%;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 16px;
+            padding: 18px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s;
+            box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .invite-btn:active { transform: scale(0.97); }
+
+        /* --- Уведомление (Тост) --- */
+        .toast {
+            position: fixed;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(48, 209, 88, 0.2);
+            border: 1px solid rgba(48, 209, 88, 0.5);
+            color: #30d158;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            opacity: 0;
+        }
+
+        .toast.show {
+            top: 20px;
+            opacity: 1;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="starCanvas"></canvas>
+    <div class="overlay"></div>
+
+    <div id="toast" class="toast">Ссылка скопирована в буфер обмена</div>
+
+    <div class="main-container">
+
+        <div class="promo-card">
+            <div class="promo-text">За каждую регистрацию по вашей ссылке вы получите</div>
+            <div class="promo-reward">
+                <span id="rewardAmount">50</span>
+                <img src="starxd.png" class="star-icon" alt="star">
+            </div>
+        </div>
+
+        <div class="section-label">Ваша персональная ссылка</div>
+        <div class="link-wrapper" onclick="copyReferralLink()">
+            <div class="link-text" id="refLinkText">Загрузка ссылки...</div>
+            <svg class="copy-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z"/>
+            </svg>
+        </div>
+
+        <div class="friends-container">
+            <div class="section-label">Ваши друзья (<span id="friendsCount">0</span>)</div>
+            <div class="friends-list" id="friendsList">
+                </div>
+        </div>
+
+        <button class="invite-btn" onclick="inviteFriends()">Пригласить друзей</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        /* --- АНИМАЦИЯ ЗВЕЗД --- */
+        const canvas = document.getElementById('starCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, stars = [];
+        const STAR_COUNT = 3000;
+        const SPEED = 0.35;
+
+        function initStars() {
+            width = window.innerWidth; height = window.innerHeight;
+            canvas.width = width; canvas.height = height;
+            stars = [];
+            for (let i = 0; i < STAR_COUNT; i++) {
+                stars.push({
+                    x: Math.random() * width - width/2,
+                    y: Math.random() * height - height/2,
+                    z: Math.random() * width
+                });
+            }
+        }
+
+        function updateStars() {
+            ctx.clearRect(0, 0, width, height);
+            for (let s of stars) {
+                s.z -= SPEED;
+                if (s.z <= 0) { s.z = width; s.x = Math.random() * width - width/2; s.y = Math.random() * height - height/2; }
+                const pX = (s.x / s.z) * (width * 0.5) + width/2;
+                const pY = (s.y / s.z) * (height * 0.5) + height/2;
+                const size = (1 - s.z / width) * 2;
+                ctx.fillStyle = `rgba(255, 255, 255, ${1 - s.z / width})`;
+                ctx.beginPath(); ctx.arc(pX, pY, size, 0, Math.PI * 2); ctx.fill();
+            }
+            requestAnimationFrame(updateStars);
+        }
+
+        window.addEventListener('resize', initStars);
+        initStars();
+        updateStars();
+
+        /* --- ЛОГИКА РЕФЕРАЛКИ --- */
+
+        // ДАННЫЕ ДЛЯ ТЕСТА (потом заменишь на данные с твоего бэкенда)
+        // Ссылка твоего бота (куда пойдут юзеры)
+        let BOT_URL = "https://t.me/YourProrokBot?start=ref12345";
+
+        // Текст, который прикрепится к ссылке в Telegram при рассылке
+        let SHARE_TEXT = "Привет! Заходи в этого бота, здесь делают точные расклады на Таро! ✨";
+
+        // Функция отрисовки данных при загрузке
+        function renderData() {
+            document.getElementById('refLinkText').innerText = BOT_URL;
+
+            // Тестовые данные друзей (заменишь на fetch запрос к серверу)
+            const myFriends = [
+                { name: "Алексей Иванов", username: "@alex_i", date: "Сегодня" },
+                { name: "Maria", username: "@mary_m", date: "Вчера" },
+                { name: "Dmitry", username: "@dima99", date: "02 Марта" }
+            ];
+
+            const friendsListEl = document.getElementById('friendsList');
+            document.getElementById('friendsCount').innerText = myFriends.length;
+
+            if (myFriends.length === 0) {
+                friendsListEl.innerHTML = '<div class="empty-friends">Вы еще никого не пригласили.<br>Отправьте ссылку друзьям!</div>';
+            } else {
+                friendsListEl.innerHTML = myFriends.map(friend => `
+                    <div class="friend-item">
+                        <div class="friend-avatar">${friend.name.charAt(0).toUpperCase()}</div>
+                        <div class="friend-info">
+                            <span class="friend-name">${friend.name}</span>
+                            <span class="friend-date">${friend.username} • ${friend.date}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Вызов вибрации (обратная связь)
+        function vibrate() {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        // Копирование ссылки
+        function copyReferralLink() {
+            vibrate();
+
+            // Нативный способ копирования
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(BOT_URL).then(showToast);
+            } else {
+                // Запасной способ для старых телефонов/вебвью
+                let textArea = document.createElement("textarea");
+                textArea.value = BOT_URL;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                textArea.style.top = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast();
+                } catch (error) {
+                    console.error('Ошибка копирования', error);
+                }
+                textArea.remove();
+            }
+        }
+
+        // Показ уведомления "Ссылка скопирована"
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // Кнопка "Пригласить друзей" (вызов нативного окна выбора чатов ТГ)
+        function inviteFriends() {
+            vibrate();
+            // Формируем специальную ссылку Share
+            // Она откроет внутри Telegram список чатов, подставит текст и ссылку
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(BOT_URL)}&text=${encodeURIComponent(SHARE_TEXT)}`;
+
+            // Нативный метод WebApp для открытия ссылок
+            tg.openTelegramLink(shareUrl);
+        }
+
+        // Инициализация при загрузке
+        renderData();
+
+    </script>
+</body>
+</html>
