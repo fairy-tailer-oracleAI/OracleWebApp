@@ -555,6 +555,16 @@
         </div>
         <div class="loader-text">Платёж в обработке</div>
         <div class="loader-subtext">Пожалуйста, не закрывайте окно</div>
+        <button onclick="tg.close()" style="
+            margin-top: 24px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 14px;
+            padding: 12px 32px;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            cursor: pointer;
+        ">Отмена</button>
     </div>
 
     <!-- Экран успеха -->
@@ -958,9 +968,30 @@
                         tg.close();
                     } else if (currentMethod === 'card' || currentMethod === 'sbp') {
                         if (data.url) {
+                            const balanceBefore = parseInt(document.getElementById('starCount').innerText.replace(/\s/g, '')) || 0;
+                            
                             tg.openLink(data.url);
-                            document.getElementById('loaderScreen').style.display = 'none';
-                            UI.successScreen.style.display = 'flex';
+                            document.getElementById('loaderScreen').style.display = 'flex';
+                            
+                            // Запускаем поллинг баланса
+                            const pollInterval = setInterval(() => {
+                                fetch(`/user-balance/?user_id=${userId}`)
+                                    .then(r => r.json())
+                                    .then(d => {
+                                        if (d.balance > balanceBefore) {
+                                            clearInterval(pollInterval);
+                                            tg.close();
+                                        }
+                                    })
+                                    .catch(() => {});
+                            }, 2000);
+                    
+                            // Таймаут — через 5 минут просто закрываем
+                            setTimeout(() => {
+                                clearInterval(pollInterval);
+                                tg.close();
+                            }, 300000);
+                    
                         } else {
                             tg.showAlert("Ошибка: Сервер не вернул ссылку на оплату.");
                         }
