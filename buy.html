@@ -90,7 +90,6 @@
             -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.1);
         }
 
-        /* Лаконичная и стильная ошибка для суммы */
         .error-message {
             color: #ff6b6b;
             font-size: 13px;
@@ -114,19 +113,6 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-5px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Ошибка для email */
-        #emailError {
-            color: #ff6b6b;
-            font-size: 12px;
-            margin-top: 6px;
-            margin-bottom: 0;
-            width: 100%;
-            box-sizing: border-box;
-            display: none;
-            text-align: center;
-            font-weight: 500;
         }
 
         .currency-suffix {
@@ -247,7 +233,6 @@
         .preset-btn { flex: 1; background: rgba(255, 255, 255, 0.08); border: none; border-radius: 20px; padding: 10px 0; color: var(--text-color); font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation; }
         .preset-btn.active { background: var(--text-color); color: #000; }
 
-        /* === СТИЛИ ЛОАДЕРА === */
         .loader-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -319,7 +304,6 @@
             line-height: 1.4;
         }
 
-        /* === СТИЛИ ЭКРАНА УСПЕХА === */
         .success-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -398,9 +382,7 @@
             transition: transform 0.1s;
         }
 
-        .success-btn:active {
-            transform: scale(0.96);
-        }
+        .success-btn:active { transform: scale(0.96); }
 
         @keyframes fadeInScale {
             from { opacity: 0; transform: scale(0.95); }
@@ -424,13 +406,18 @@
 
         <div class="label">Способ оплаты</div>
         <div class="methods">
-            <div class="method active" id="method-card" onclick="setMethod('card')">Карта / СБП</div>
+            <div class="method active" id="method-card" onclick="setMethod('card')">Карта</div>
             <div class="method" id="method-stars" onclick="setMethod('stars')">Telegram Stars</div>
+        </div>
+        <div class="methods" style="margin-top: -10px;">
+            <div class="method" id="method-sbp" onclick="setMethod('sbp')" style="grid-column: 1 / -1;">
+                СБП
+            </div>
         </div>
 
         <div class="input-section">
             <div class="input-wrapper">
-                <input type="number" id="amountInput" value="300" placeholder="100" inputmode="numeric">
+                <input type="number" id="amountInput" value="300" placeholder="100" inputmode="numeric" step="1" min="100">
                 <div id="currencySuffix" class="currency-suffix">₽</div>
             </div>
 
@@ -456,6 +443,7 @@
         <button class="pay-button" onclick="showConfirm()">Пополнить</button>
     </div>
 
+    <!-- Модалка подтверждения -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="confirm-modal">
             <div class="confirm-title">Подтверждение оплаты</div>
@@ -465,17 +453,53 @@
             </div>
             <div class="confirm-row">
                 <div class="confirm-label">Количество звёзд:</div>
-                <div class="confirm-value"><span id="modalStars">0</span> <img src="starxd.png" class="star-icon" alt="star"></div>
+                <div class="confirm-value">
+                    <span id="modalStars">0</span>
+                    <img src="starxd.png" class="star-icon" alt="star">
+                </div>
             </div>
             <div class="confirm-row">
                 <div class="confirm-label">Сумма к оплате:</div>
                 <div id="modalAmount" class="confirm-value2">0 ₽</div>
             </div>
 
-            <div class="confirm-row" id="emailRow">
-                <div class="confirm-label">Ваш email для отправки чека:</div>
-                <input type="email" id="emailInput" placeholder="example@mail.ru" style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2); text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;">
-                <div id="emailError">Укажите email для отправки чека</div>
+            <!-- Email для чека (скрывается при Stars) -->
+            <!-- Кнопка "Нужен чек" + скрытое поле email -->
+            <div class="confirm-row" id="receiptRow">
+                <button id="receiptToggleBtn" onclick="toggleReceiptField()" style="
+                    width: 100%;
+                    background: rgba(255, 255, 255, 0.06);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
+                    border-radius: 14px;
+                    padding: 14px;
+                    color: rgba(255,255,255,0.7);
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    touch-action: manipulation;
+                ">
+                    🧾 Нужен чек
+                </button>
+            
+                <div id="emailRow" style="display: none; flex-direction: column; gap: 6px; width: 100%; margin-top: 10px;">
+                    <input
+                        type="email"
+                        id="emailInput"
+                        placeholder="example@mail.ru"
+                        inputmode="email"
+                        autocomplete="email"
+                        style="width:100%; border-radius:12px; border:1px solid rgba(255,255,255,0.2);
+                        text-align: left; font-size: 16px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff;"
+                    >
+                    <div id="emailError" style="color:#ff6b6b; font-size:12px; display:none; text-align:center; font-weight:500;">
+                        Введите корректный email
+                    </div>
+                </div>
             </div>
 
             <button class="pay-button" style="margin-top: 10px;" onclick="finalPay()">Оплатить</button>
@@ -483,6 +507,7 @@
         </div>
     </div>
 
+    <!-- Лоадер -->
     <div class="loader-overlay" id="loaderScreen">
         <div class="loader">
             <svg id="pegtopone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -532,6 +557,7 @@
         <div class="loader-subtext">Пожалуйста, не закрывайте окно</div>
     </div>
 
+    <!-- Экран успеха -->
     <div class="success-overlay" id="successScreen">
         <div class="success-wrapper" id="successWrapper">
             <div class="success-card">
@@ -551,15 +577,33 @@
         tg.expand();
         tg.ready();
 
+        if (tg.BackButton) {
+            try {
+                tg.BackButton.show();
+                tg.BackButton.onClick(() => {
+                    window.location.href = 'https://stage-test.ai-prorok.webtm.ru/profile/';
+                });
+            } catch (e) {
+                console.warn('BackButton недоступна в этом клиенте Telegram', e);
+            }
+        }
+
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) {
+                document.getElementById('loaderScreen').style.display = 'none';
+            }
+        });
+
         const userId = tg.initDataUnsafe?.user?.id;
 
+        // Загружаем FOMO-статус
         if (userId) {
             fetch(`/user-fomo-status/?user_id=${userId}`)
                 .then(r => r.json())
                 .then(data => {
                     if (data.status === 'ok' && data.bonus_available && data.time_left > 0) {
-                        UI.promoWrapper.style.display = 'block'; // Показываем баннер
-                        startRobustTimer(data.time_left); // Запускаем точный таймер
+                        UI.promoWrapper.style.display = 'block';
+                        startRobustTimer(data.time_left);
                     } else {
                         timeLeft = 0;
                         UI.promoWrapper.style.display = 'none';
@@ -567,23 +611,29 @@
                     }
                 })
                 .catch(err => console.error("Ошибка загрузки FOMO:", err));
+
+            // Загружаем сохранённый email
+            fetch(`/user-email/?user_id=${userId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.email) {
+                        document.getElementById('emailInput').value = data.email;
+                    }
+                })
+                .catch(err => console.error('Email не загружен:', err));
         }
 
         document.addEventListener('touchstart', (e) => {
-            if (e.target.closest('button, .method, .pay-button, .cancel-btn')) {
-                return;
-            }
+            if (e.target.closest('button, .method, .pay-button, .cancel-btn')) return;
             if (e.target.tagName !== 'INPUT') {
                 const activeEl = document.activeElement;
-                if (activeEl && activeEl.tagName === 'INPUT') {
-                    activeEl.blur();
-                }
+                if (activeEl && activeEl.tagName === 'INPUT') activeEl.blur();
             }
         }, { passive: true });
 
         const UI = {
             amountInput: document.getElementById('amountInput'),
-            amountError: document.getElementById('amountError'), // Добавлено управление ошибкой
+            amountError: document.getElementById('amountError'),
             currencySuffix: document.getElementById('currencySuffix'),
             starCount: document.getElementById('starCount'),
             oldStarCount: document.getElementById('oldStarCount'),
@@ -595,9 +645,6 @@
             modalMethod: document.getElementById('modalMethod'),
             modalStarsSpan: document.getElementById('modalStars'),
             modalAmount: document.getElementById('modalAmount'),
-            emailRow: document.getElementById('emailRow'),
-            emailInput: document.getElementById('emailInput'),
-            emailError: document.getElementById('emailError'),
             priceList: document.getElementById('priceListContainer'),
             presets: document.getElementById('presetsContainer'),
             successWrapper: document.getElementById('successWrapper'),
@@ -620,13 +667,39 @@
         const SERVICES = [{ name: "🔮 Расклад", cost: 6 }, { name: "❤️ Диалог", cost: 1 }];
         let timerInterval = null;
         let sparksInterval = null;
+        let receiptRequested = false;
+
+        function toggleReceiptField() {
+            vibrate();
+            receiptRequested = !receiptRequested;
+            const emailRow = document.getElementById('emailRow');
+            const btn = document.getElementById('receiptToggleBtn');
+        
+            if (receiptRequested) {
+                emailRow.style.display = 'flex';
+                btn.style.background = 'rgba(0, 122, 255, 0.15)';
+                btn.style.borderColor = 'rgba(0, 122, 255, 0.5)';
+                btn.style.color = '#fff';
+                btn.innerHTML = '✅ Чек на email';
+                // Фокус на поле с небольшой задержкой
+                setTimeout(() => document.getElementById('emailInput').focus(), 100);
+            } else {
+                emailRow.style.display = 'none';
+                btn.style.background = 'rgba(255, 255, 255, 0.06)';
+                btn.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                btn.style.color = 'rgba(255,255,255,0.7)';
+                btn.innerHTML = '🧾 Нужен чек';
+                document.getElementById('emailInput').value = '';
+                document.getElementById('emailError').style.display = 'none';
+            }
+        }
 
         fetch('/payment-settings/')
             .then(r => r.json())
             .then(data => {
                 STARS_TO_POINTS = data.stars_to_points;
                 RUB_TO_POINTS = data.rub_to_points;
-                updateConversion(); // обновляем отображение
+                updateConversion();
             })
             .catch(err => console.error('Не удалось загрузить курсы:', err));
 
@@ -637,9 +710,7 @@
         document.body.appendChild(measureSpan);
 
         function vibrate() {
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
 
         function initStars() {
@@ -672,23 +743,18 @@
             for(let i = 0; i < SPARK_COUNT_PER_TICK; i++) {
                 const spark = document.createElement('div');
                 spark.className = 'promo-spark';
-
                 const side = Math.floor(Math.random() * 4);
                 let x, y, tx, ty;
-
                 if (side === 0) { x = Math.random() * b.width; y = 0; tx = (Math.random() - 0.5) * SPARK_SPEED; ty = -SPARK_SPEED; }
                 else if (side === 1) { x = b.width; y = Math.random() * b.height; tx = SPARK_SPEED; ty = (Math.random() - 0.5) * SPARK_SPEED; }
                 else if (side === 2) { x = Math.random() * b.width; y = b.height; tx = (Math.random() - 0.5) * SPARK_SPEED; ty = SPARK_SPEED; }
                 else { x = 0; y = Math.random() * b.height; tx = -SPARK_SPEED; ty = (Math.random() - 0.5) * SPARK_SPEED; }
-
                 spark.style.left = x + 'px';
                 spark.style.top = y + 'px';
                 spark.style.setProperty('--tx', (tx * (0.5 + Math.random())) + 'px');
                 spark.style.setProperty('--ty', (ty * (0.5 + Math.random())) + 'px');
-
                 const duration = SPARK_LIFETIME * (0.6 + Math.random() * 0.4);
                 spark.style.animation = `sparkleOut ${duration}s forwards ease-out`;
-
                 element.appendChild(spark);
                 setTimeout(() => spark.remove(), duration * 1000);
             }
@@ -703,7 +769,6 @@
             function tick() {
                 const now = Date.now();
                 timeLeft = Math.round((endTime - now) / 1000);
-
                 if (timeLeft <= 0) {
                     timeLeft = 0;
                     clearInterval(timerInterval);
@@ -712,7 +777,6 @@
                     updateConversion();
                     return;
                 }
-
                 let m = Math.floor(timeLeft / 60);
                 let s = timeLeft % 60;
                 UI.timer.textContent = `${m}:${s < 10 ? '0' + s : s}`;
@@ -720,7 +784,6 @@
 
             tick();
             timerInterval = setInterval(tick, 1000);
-
             sparksInterval = setInterval(() => {
                 if (timeLeft > 0 && UI.promoWrapper.style.display !== 'none') {
                     createSparklesForElement(UI.promoWrapper);
@@ -735,7 +798,6 @@
             const val = UI.amountInput.value || "0";
             measureSpan.style.font = window.getComputedStyle(UI.amountInput).font;
             measureSpan.innerText = val;
-
             const offset = (measureSpan.getBoundingClientRect().width / 2) + 15;
             UI.currencySuffix.style.transform = `translateX(${offset}px)`;
         }
@@ -748,12 +810,12 @@
 
         function updateConversion() {
             const val = parseFloat(UI.amountInput.value) || 0;
-            const base = Math.floor(val * (currentMethod === 'card' ? RUB_TO_POINTS : STARS_TO_POINTS));
+            const isRubMethod = currentMethod === 'card' || currentMethod === 'sbp';
+            const rate = isRubMethod ? RUB_TO_POINTS : STARS_TO_POINTS;
+            const base = Math.floor(val * rate);
             const mult = (val >= 300 && timeLeft > 0) ? 1.2 : 1.0;
             const final = Math.floor(base * mult);
-
             UI.starCount.textContent = final.toLocaleString();
-
             if (mult > 1 && val > 0) {
                 UI.oldStarCount.textContent = base.toLocaleString();
                 UI.oldStarCount.style.display = 'inline-block';
@@ -763,15 +825,30 @@
             adjustSuffix();
         }
 
+        function hideAmountError() {
+            UI.amountInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            UI.amountError.style.display = 'none';
+        }
+
+        function showAmountError() {
+            UI.amountInput.style.borderColor = 'rgba(255, 59, 48, 0.5)';
+            if (currentMethod === 'card' || currentMethod === 'sbp') {
+                UI.amountError.innerHTML = 'Минимальная сумма — 100 ₽';
+            } else {
+                UI.amountError.innerHTML = 'Минимальная сумма — 100 <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
+            }
+            UI.amountError.style.display = 'block';
+        }
+
         function setMethod(m) {
             vibrate();
             currentMethod = m;
             UI.methodCard.classList.toggle('active', m === 'card');
             UI.methodStars.classList.toggle('active', m === 'stars');
-            UI.currencySuffix.innerHTML = m === 'card' ? '₽' : SUFFIX_STAR_HTML;
-
+            document.getElementById('method-sbp').classList.toggle('active', m === 'sbp');
+            UI.currencySuffix.innerHTML = m === 'stars' ? SUFFIX_STAR_HTML : '₽';
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-
+            hideAmountError();
             updateConversion();
         }
 
@@ -780,75 +857,80 @@
             UI.amountInput.value = v;
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
-
-            // НОВОЕ: Прячем ошибку, если пользователь нажал на кнопку-пресет
-            UI.amountInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-            UI.amountError.style.display = 'none';
-
+            hideAmountError();
             updateConversion();
         }
 
         function showConfirm() {
             vibrate();
-
-            // ПРОВЕРКА НА МИН. СУММУ (100)
             const amount = parseFloat(UI.amountInput.value) || 0;
-            if (amount < 100) {
-                UI.amountInput.style.borderColor = 'rgba(255, 59, 48, 0.5)'; // Мягкая красная рамка
-
-                if (currentMethod === 'card') {
-                    UI.amountError.innerHTML = 'Минимальная сумма - 100 ₽';
-                } else {
-                    UI.amountError.innerHTML = 'Минимальная сумма - 100 <img src="star.png" style="width:14px; vertical-align:middle; margin-top:-2px; filter:none;">';
-                }
-
-                UI.amountError.style.display = 'block';
-                return; // Тормозим открытие окна
+            const minAmount = devMode ? 1 : 100;
+            if (amount < minAmount) {
+                showAmountError();
+                return;
             }
 
             const starCount = UI.starCount.textContent;
-            UI.modalMethod.textContent = currentMethod === 'card' ? 'Карта / СБП' : 'Telegram Stars';
+
+            if (currentMethod === 'stars') {
+                UI.modalMethod.textContent = 'Telegram Stars';
+            } else if (currentMethod === 'sbp') {
+                UI.modalMethod.textContent = 'СБП';
+            } else {
+                UI.modalMethod.textContent = 'Карта';
+            }
 
             UI.modalStarsSpan.textContent = starCount;
 
             if (currentMethod === 'stars') {
                 UI.modalAmount.innerHTML = `${UI.amountInput.value} <img src="star.png" class="suffix-icon-no-glow" alt="star">`;
-                UI.emailRow.style.setProperty('display', 'none', 'important');
+                document.getElementById('receiptRow').style.setProperty('display', 'none', 'important');
             } else {
                 UI.modalAmount.textContent = `${UI.amountInput.value} ₽`;
-                UI.emailRow.style.setProperty('display', 'flex', 'important');
+                document.getElementById('receiptRow').style.setProperty('display', 'flex', 'important');
             }
+            // Сбрасываем состояние кнопки при каждом открытии модалки
+            receiptRequested = false;
+            document.getElementById('emailRow').style.display = 'none';
+            document.getElementById('receiptToggleBtn').style.cssText = `
+                width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+                border-radius:14px; padding:14px; color:rgba(255,255,255,0.7); font-size:14px;
+                font-weight:600; cursor:pointer; display:flex; align-items:center;
+                justify-content:center; gap:8px; touch-action:manipulation;
+            `;
+            document.getElementById('receiptToggleBtn').innerHTML = '🧾 Нужен чек';
+
             UI.modalOverlay.style.display = 'flex';
         }
 
         function closeModal() {
             vibrate();
-            UI.emailInput.blur();
+            document.getElementById('emailInput').blur();
             UI.modalOverlay.style.display = 'none';
-            UI.emailError.style.display = 'none';
-            UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
+            receiptRequested = false;
+            document.getElementById('emailRow').style.display = 'none';
+            document.getElementById('emailError').style.display = 'none';
+            document.getElementById('emailInput').style.borderColor = 'rgba(255,255,255,0.2)';
         }
 
         function finalPay() {
             vibrate();
             let email = '';
 
-            UI.emailInput.blur();
-
-            if (currentMethod === 'card') {
-                email = UI.emailInput.value;
-                if (!email.includes('@')) {
-                    UI.emailInput.style.borderColor = '#ff453a';
-                    UI.emailError.style.display = 'block';
+            // Валидируем email только для карты/СБП
+            if (currentMethod !== 'stars' && receiptRequested) {
+                email = document.getElementById('emailInput').value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+                if (!emailRegex.test(email)) {
+                    document.getElementById('emailInput').style.borderColor = '#ff453a';
+                    document.getElementById('emailError').style.display = 'block';
                     return;
                 }
-
-                UI.emailError.style.display = 'none';
-                UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
+                document.getElementById('emailError').style.display = 'none';
+                document.getElementById('emailInput').style.borderColor = 'rgba(255,255,255,0.2)';
             }
 
             closeModal();
-
             document.getElementById('loaderScreen').style.display = 'flex';
 
             const payload = {
@@ -861,15 +943,11 @@
 
             fetch('/webapp-payment/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 return response.json();
             })
             .then(data => {
@@ -878,10 +956,10 @@
                 if (data.status === 'ok') {
                     if (currentMethod === 'stars') {
                         tg.close();
-                    }
-                    else if (currentMethod === 'card') {
+                    } else if (currentMethod === 'card' || currentMethod === 'sbp') {
                         if (data.url) {
                             tg.openLink(data.url);
+                            document.getElementById('loaderScreen').style.display = 'none';
                             UI.successScreen.style.display = 'flex';
                         } else {
                             tg.showAlert("Ошибка: Сервер не вернул ссылку на оплату.");
@@ -897,23 +975,32 @@
             });
         }
 
-        UI.emailInput.addEventListener('input', () => {
-            UI.emailError.style.display = 'none';
-            UI.emailInput.style.borderColor = 'rgba(255,255,255,0.2)';
-        });
-
         UI.presets.innerHTML = [150, 300, 500, 1500].map(v => `
             <button class="preset-btn ${v === 300 ? 'active' : ''}" onclick="updateAmount(${v}, this)">${v}</button>
         `).join('');
 
         window.addEventListener('resize', initStars);
 
-        // НОВОЕ: Прячем ошибку, как только юзер начинает сам вводить новую сумму
         UI.amountInput.addEventListener('input', () => {
+            if (UI.amountInput.value.includes('.') || UI.amountInput.value.includes(',')) {
+                UI.amountInput.value = Math.floor(parseFloat(UI.amountInput.value)) || '';
+            }
             document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-            UI.amountInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-            UI.amountError.style.display = 'none';
+            hideAmountError();
             updateConversion();
+        });
+
+        let devClicks = 0;
+        let devMode = false;
+
+        document.querySelector('.label').addEventListener('click', () => {
+            devClicks++;
+            if (devClicks >= 5) {
+                devMode = true;
+                devClicks = 0;
+                tg.HapticFeedback.impactOccurred('heavy');
+                document.querySelector('.label').textContent = 'Услуги и цены 🛠️';
+            }
         });
 
         initStars();
