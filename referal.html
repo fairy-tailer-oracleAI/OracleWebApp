@@ -60,17 +60,17 @@
             border: 0.5px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
             border-radius: 20px;
-            padding: 18px 16px;
+            padding: 16px 12px; /* Уменьшили боковые отступы, чтобы дать больше места ценам */
             margin-bottom: 16px;
             display: flex;
             flex-direction: row;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
 
         /* Картинка подруг */
         .promo-image {
-            width: 90px;
+            width: 110px; /* Чуть-чуть уменьшили для узких экранов */
             height: auto;
             flex-shrink: 0;
             filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
@@ -89,7 +89,7 @@
             font-weight: 500;
             line-height: 1.4;
             color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         /* КОНТЕЙНЕР: +50 слева, прайс справа */
@@ -97,21 +97,21 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            gap: 16px;
+            gap: 8px; /* Уменьшили расстояние, чтобы всё влезло */
             width: 100%;
+            flex-wrap: wrap; /* СПАСАЕТ ОТ ВЫЛЕТА: если не влезет, аккуратно перенесет */
         }
 
-        /* Плашка для награды */
+        /* Плашка для награды (Теперь центрирована идеально) */
         .promo-reward-badge {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 44px;
-            padding: 0 4px 0 16px;
             background: rgba(0, 122, 255, 0.15);
             border: 1px solid rgba(0, 122, 255, 0.3);
             border-radius: 12px;
-            font-size: 22px;
+            padding: 2px 0px 2px 12px; /* Балансируем пустое место вокруг звезды */
+            font-size: 20px;
             font-weight: 800;
             color: #ffffff;
             box-shadow: 0 4px 10px rgba(0, 122, 255, 0.1);
@@ -119,34 +119,35 @@
 
         .star-icon {
             width: 40px; /* Размер не тронут */
-            height: 40px;
+            height: 40px; /* Размер не тронут */
             object-fit: contain;
-            margin-left: -6px;
-            margin-right: -4px;
-            position: relative;
-            top: 1px; /* Увеличивай это значение (например, 6px), чтобы опустить еще ниже */
+            margin-left: -5px; /* Придвинули к цифрам */
+            margin-right: -2px; /* Убрали лишнее справа */
             filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.4));
         }
 
-        /* === ПРАЙС-ЛИСТ (Стал более компактным) === */
+        /* === ПРАЙС-ЛИСТ (Идеальная ровная колонка) === */
         .promo-prices {
             display: flex;
             flex-direction: column;
-            gap: 3.5px; /* Чуть уменьшили расстояние между плашками */
+            gap: 4px;
+            flex: 1; /* Растягивается на свободное место, не вылетая за края */
+            min-width: 110px;
         }
 
         .promo-price-item {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: space-between; /* Раскидываем текст влево, цену вправо */
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1px 8px; /* Меньше отступы внутри рамки */
-            border-radius: 8px; /* Чуть меньше закругление */
-            font-size: 11.5px; /* Шрифт чуть меньше */
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
             font-weight: 600;
             color: rgba(255, 255, 255, 0.9);
-            width: 120px; /* Уменьшили ширину плашек */
+            width: 120px;
+            gap: 2px;
         }
 
         .price-text {
@@ -158,17 +159,16 @@
         .price-val {
             display: flex;
             align-items: center;
-            font-size: 10px; /* Цена чуть компактнее */
+            font-size: 13px;
             font-weight: 800;
             color: #fff;
         }
 
         .star-icon-small {
             width: 20px; /* Размер не тронут */
-            height: 15px;
+            height: 15px; /* Размер не тронут */
             object-fit: contain;
-            margin-left: -2px;
-            transform: translateY(0.8px);
+            margin-left: 2px;
             filter: drop-shadow(0 0 4px rgba(0, 210, 255, 0.3));
         }
 
