@@ -823,7 +823,7 @@
             const isRubMethod = currentMethod === 'card' || currentMethod === 'sbp';
             const rate = isRubMethod ? RUB_TO_POINTS : STARS_TO_POINTS;
             const base = Math.floor(val * rate);
-            const mult = (val >= 200 && timeLeft > 0) ? 1.2 : 1.0;
+            const mult = (val >= 150 && timeLeft > 0) ? 1.2 : 1.0;
             const final = Math.floor(base * mult);
             UI.starCount.textContent = final.toLocaleString();
             if (mult > 1 && val > 0) {
