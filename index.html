@@ -607,8 +607,8 @@
                     body: JSON.stringify(payload),
                     credentials: 'include'
                 });
-
                 Telegram.WebApp.close();
+              }, { once: true });
             }
 
             getRandomCards(cards, count) {
