@@ -606,17 +606,9 @@
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify(payload),
                     credentials: 'include'
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        Telegram.WebApp.close();
-                    })
-                    .catch(err => {
-                        alert("Ошибка отправки данных: " + err);
-                        Telegram.WebApp.close();
-                    });
-                setTimeout(() => Telegram.WebApp.close(), 800);
-              },{ once: true });
+                });
+
+                Telegram.WebApp.close();
             }
 
             getRandomCards(cards, count) {
