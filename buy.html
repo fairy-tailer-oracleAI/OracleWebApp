@@ -417,7 +417,7 @@
 
         <div class="input-section">
             <div class="input-wrapper">
-                <input type="number" id="amountInput" value="300" placeholder="100" inputmode="numeric" step="1" min="100">
+                <input type="number" id="amountInput" value="100" placeholder="100" inputmode="numeric" step="1" min="100">
                 <div id="currencySuffix" class="currency-suffix">₽</div>
             </div>
 
@@ -1007,7 +1007,7 @@
         }
 
         UI.presets.innerHTML = [150, 300, 500, 1500].map(v => `
-            <button class="preset-btn ${v === 300 ? 'active' : ''}" onclick="updateAmount(${v}, this)">${v}</button>
+            <button class="preset-btn ${v === 2000 ? 'active' : ''}" onclick="updateAmount(${v}, this)">${v}</button>
         `).join('');
 
         window.addEventListener('resize', initStars);
