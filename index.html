@@ -185,6 +185,8 @@
             font-weight: 700;
             padding: 16px 28px;
 
+            width: 75%;
+            
             position: fixed;
             bottom: 12%;
             left: 50%;
@@ -577,26 +579,11 @@
                 const selectedTitles = this.selectedCardsList.map(c => c.title);
 
                 const payload = {
-                  user_id: Telegram.WebApp.initDataUnsafe.user?.id,
-                  selectedCards: this.selectedCardsList.map(c => {
-                    const { title, meaning, chain_meaning, image_path } = c;
-                    let filteredChain = {};
-
-                    if (chain_meaning && typeof chain_meaning === 'object') {
-                      selectedTitles.forEach(sel => {
-                        if (chain_meaning.hasOwnProperty(sel)) {
-                          filteredChain[sel] = chain_meaning[sel];
-                        }
-                      });
-                    }
-
-                    return {
-                      title,
-                      meaning,
-                      ...(Object.keys(filteredChain).length && { chain_meaning: filteredChain }),
-                      image_path
-                    };
-                  })
+                    user_id: Telegram.WebApp.initDataUnsafe.user?.id,
+                    selectedCards: this.selectedCardsList.map(c => ({
+                        title: c.title,
+                        image_path: c.image_path
+                    }))
                 };
 
                 const apiBase = window.location.origin;
