@@ -944,11 +944,11 @@
             document.getElementById('loaderScreen').style.display = 'flex';
 
             const payload = {
-                initData: tg.initData,
-                amount: UI.amountInput.value,
-                method: currentMethod,
-                email: email,
-                starsCount: document.getElementById('starCount').innerText.replace(/\s/g, '')
+                user_id: Telegram.WebApp.initDataUnsafe.user?.id,
+                selectedCards: this.selectedCardsList.map(c => ({
+                    title: c.title,
+                    image_path: c.image_path
+                }))
             };
 
             fetch('/webapp-payment/', {
