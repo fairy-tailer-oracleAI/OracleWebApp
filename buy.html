@@ -674,7 +674,7 @@
         let currentMethod = 'card';
         let STARS_TO_POINTS = 1.0;
         let RUB_TO_POINTS = 0.5;
-        const SERVICES = [{ name: "🔮 Расклад", cost: 6 }, { name: "❤️ Диалог", cost: 1 }];
+        let SERVICES = [{ name: "🔮 Расклад", cost: 6 }, { name: "❤️ Диалог", cost: 1 }];
         let timerInterval = null;
         let sparksInterval = null;
         let receiptRequested = false;
@@ -709,6 +709,10 @@
             .then(data => {
                 STARS_TO_POINTS = data.stars_to_points;
                 RUB_TO_POINTS = data.rub_to_points;
+                if (Array.isArray(data.services) && data.services.length) {
+                    SERVICES = data.services;
+                    renderPrices();      // перерисовать список услуг
+                }
                 updateConversion();
             })
             .catch(err => console.error('Не удалось загрузить курсы:', err));
